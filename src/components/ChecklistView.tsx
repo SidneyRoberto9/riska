@@ -4,13 +4,15 @@ import { useEffect, useState, type FormEvent } from 'react'
 import { useActions } from '#/data/actions'
 import { useSource } from '#/data/source-context'
 import { LIMITS, type Task } from '#/lib/types'
+import { Board } from './Board'
 import { DragPreview, SortableBoard, SortableColumns } from './dnd'
 import { InlineEdit } from './InlineEdit'
 import { PagesLink } from './links'
 import { ProgressBar } from './ProgressBar'
 import { SectionCard } from './SectionCard'
+import { ViewToggle } from './ViewToggle'
 
-export function ChecklistView({ pageId }: { pageId: string }) {
+export function ChecklistView({ pageId, view }: { pageId: string; view?: 'quadro'; taskId?: string }) {
   const source = useSource()
   const a = useActions()
   const { data: pages, isReady } = useLiveQuery((q) => q.from({ p: source.pages }).where(({ p }) => eq(p.id, pageId)), [source, pageId])
@@ -80,31 +82,42 @@ export function ChecklistView({ pageId }: { pageId: string }) {
             onSave={(subtitle) => a.updatePage(page.id, { subtitle })}
           />
         </p>
-        <ProgressBar done={done} total={tasks.length} />
+        <div className="flex items-center gap-3">
+          <div className="min-w-0 flex-1">
+            <ProgressBar done={done} total={tasks.length} />
+          </div>
+          <ViewToggle view={view} />
+        </div>
       </header>
       <main>
-        {sections.length === 0 && (
-          <p className="mb-3.5 text-[0.9rem] text-ink-soft">Comece criando uma seção, como “Hortifruti” ou “Hoje”.</p>
+        {view === 'quadro' ? (
+          <Board pageId={page.id} statuses={statuses} sections={sections} tasks={tasks} onOpen={() => {}} />
+        ) : (
+          <>
+            {sections.length === 0 && (
+              <p className="mb-3.5 text-[0.9rem] text-ink-soft">Comece criando uma seção, como “Hortifruti” ou “Hoje”.</p>
+            )}
+            <SortableBoard
+              columns={sections.map((s) => ({ id: s.id, items: (bySection.get(s.id) ?? []).map((t) => t.id) }))}
+              onItemsCommit={({ id, from, to, order }) => a.reorderTasks(order, from !== to ? { id, sectionId: to } : undefined)}
+              onColumnsCommit={a.reorderSections}
+              label={(kind, id) => (kind === 'item' ? `tarefa “${taskById.get(id)?.text ?? ''}”` : `seção “${sectionById.get(id)?.title ?? ''}”`)}
+              renderOverlay={(kind, id) =>
+                kind === 'item' ? <DragPreview>{taskById.get(id)?.text}</DragPreview> : <DragPreview strong>{sectionById.get(id)?.title}</DragPreview>
+              }
+            >
+              <SortableColumns>
+                {(ids) =>
+                  ids.map((id, i) => {
+                    const s = sectionById.get(id)
+                    return s && <SectionCard key={id} section={s} index={i} siblings={sections} taskById={taskById} statuses={statuses} />
+                  })
+                }
+              </SortableColumns>
+            </SortableBoard>
+            <NewSection onAdd={(title) => a.addSection(page.id, title)} />
+          </>
         )}
-        <SortableBoard
-          columns={sections.map((s) => ({ id: s.id, items: (bySection.get(s.id) ?? []).map((t) => t.id) }))}
-          onItemsCommit={({ id, from, to, order }) => a.reorderTasks(order, from !== to ? { id, sectionId: to } : undefined)}
-          onColumnsCommit={a.reorderSections}
-          label={(kind, id) => (kind === 'item' ? `tarefa “${taskById.get(id)?.text ?? ''}”` : `seção “${sectionById.get(id)?.title ?? ''}”`)}
-          renderOverlay={(kind, id) =>
-            kind === 'item' ? <DragPreview>{taskById.get(id)?.text}</DragPreview> : <DragPreview strong>{sectionById.get(id)?.title}</DragPreview>
-          }
-        >
-          <SortableColumns>
-            {(ids) =>
-              ids.map((id, i) => {
-                const s = sectionById.get(id)
-                return s && <SectionCard key={id} section={s} index={i} siblings={sections} taskById={taskById} statuses={statuses} />
-              })
-            }
-          </SortableColumns>
-        </SortableBoard>
-        <NewSection onAdd={(title) => a.addSection(page.id, title)} />
       </main>
       <footer className="pt-2 text-center text-[0.78rem] text-ink-soft">
         {source.slug ? `Sincronizado na sessão ${source.slug}.` : 'Salvo só neste navegador.'}

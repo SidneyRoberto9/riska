@@ -1,9 +1,11 @@
 import { createFileRoute } from '@tanstack/react-router'
 import { ChecklistView } from '#/components/ChecklistView'
+import { validatePageSearch } from '#/data/page-search'
 
-export const Route = createFileRoute('/s/$slug/p/$pageId')({ component: Page })
+export const Route = createFileRoute('/s/$slug/p/$pageId')({ validateSearch: validatePageSearch, component: Page })
 
 function Page() {
   const { pageId } = Route.useParams()
-  return <ChecklistView pageId={pageId} />
+  const { view, task } = Route.useSearch()
+  return <ChecklistView pageId={pageId} view={view} taskId={task} />
 }
