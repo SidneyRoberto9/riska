@@ -67,13 +67,14 @@ export function PagesView() {
             }
           </ColumnItems>
         </SortableBoard>
-        <form onSubmit={create} className="mt-2.5 flex gap-2 rounded-2xl border border-dashed border-line p-2">
+        <form onSubmit={create} className="mt-2.5 flex gap-2 rounded-2xl border border-dashed border-line p-2 focus-within:border-accent">
           <input
             value={title}
             onChange={(e) => setTitle(e.target.value)}
             maxLength={LIMITS.title}
             placeholder="+ nova página"
             aria-label="Nova página"
+            autoComplete="off"
             className="min-w-0 flex-1 bg-transparent px-2 py-2 font-display font-bold outline-none placeholder:text-ink-soft"
           />
           {title.trim() && <button className="rounded-xl bg-accent px-4 font-semibold text-surface">Criar</button>}
