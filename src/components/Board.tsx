@@ -47,7 +47,7 @@ export function Board({
   const statusById = new Map(statuses.map((s) => [s.id, s]))
   const columns = statuses.map((s) => ({ id: s.id, items: [] as string[] }))
   const column = new Map(columns.map((c) => [c.id, c]))
-  for (const t of [...tasks].sort((x, y) => x.boardPosition - y.boardPosition)) {
+  for (const t of [...tasks].sort((x, y) => x.boardPosition - y.boardPosition || x.position - y.position || x.id.localeCompare(y.id))) {
     const s = statusOf(t, statuses)
     if (s) column.get(s.id)?.items.push(t.id)
   }
