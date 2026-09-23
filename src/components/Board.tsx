@@ -211,6 +211,10 @@ function Card({ task, statuses, sectionTitle, onOpen }: { task: Task; statuses: 
       ref={setNodeRef}
       style={style}
       {...dragFrom(listeners)}
+      // Clicks anywhere on the card open it, except on its own controls (checkbox, menu)
+      onClick={(e) => {
+        if (!(e.target as Element).closest('[data-no-drag]') && !blocked()) onOpen(task.id)
+      }}
       className={`group cursor-grab rounded-xl border border-line bg-surface p-2.5 shadow-sm transition-shadow hover:shadow-md ${isDragging ? 'drag-ghost' : ''}`}
     >
       <div className="flex items-start gap-2">
@@ -223,9 +227,6 @@ function Card({ task, statuses, sectionTitle, onOpen }: { task: Task; statuses: 
           ref={setActivatorNodeRef}
           {...attributes}
           aria-haspopup="dialog"
-          onClick={() => {
-            if (!blocked()) onOpen(task.id)
-          }}
           className={`min-w-0 flex-1 cursor-pointer text-left text-[0.9rem] leading-snug break-words line-clamp-3 ${task.done ? 'text-ink-soft line-through decoration-ink-soft/40' : ''}`}
         >
           {task.text}
