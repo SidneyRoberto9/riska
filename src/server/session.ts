@@ -35,32 +35,48 @@ export const loginFn = createServerFn({ method: 'POST' })
   .validator(shape({ slug: str(100), pin: str(10) }))
   .handler(async ({ data }): Promise<LoginResult> => {
     const sql = await db()
-    const [s] = SLUG_RE.test(data.slug)
-      ? await sql<{ pinHash: string; lockedUntil: Date | null }[]>`
-          select pin_hash, locked_until from sessions where slug = ${data.slug}`
-      : []
-    if (!s) {
+    if (!SLUG_RE.test(data.slug)) {
       await verifyPin('0000', await dummyHash)
       return { ok: false, reason: 'invalid' }
     }
-    if (s.lockedUntil && s.lockedUntil > new Date()) {
-      return { ok: false, reason: 'locked', until: s.lockedUntil.toISOString() }
+    // Claim the attempt atomically before verifying: only a row that is not
+    // currently locked gets its counter bumped, so at most MAX_FAILS PIN
+    // verifications can happen per lock window even under concurrent requests.
+    const [claim] = await sql<{ pinHash: string; failedAttempts: number; lockLevel: number }[]>`
+      update sessions set failed_attempts = failed_attempts + 1
+      where slug = ${data.slug} and (locked_until is null or locked_until <= now())
+      returning pin_hash, failed_attempts, lock_level`
+    if (!claim) {
+      const [row] = await sql<{ lockedUntil: Date | null }[]>`
+        select locked_until from sessions where slug = ${data.slug}`
+      if (row?.lockedUntil && row.lockedUntil > new Date()) {
+        return { ok: false, reason: 'locked', until: row.lockedUntil.toISOString() }
+      }
+      await verifyPin('0000', await dummyHash)
+      return { ok: false, reason: 'invalid' }
     }
-    if (await verifyPin(data.pin, s.pinHash)) {
+    if (claim.failedAttempts > MAX_FAILS) {
+      // Concurrent burst: another request already claimed the 5th attempt and locked
+      // the slug. Don't spend scrypt time verifying a PIN that can't count anymore.
+      const [row] = await sql<{ lockedUntil: Date | null }[]>`
+        select locked_until from sessions where slug = ${data.slug}`
+      if (row?.lockedUntil && row.lockedUntil > new Date()) {
+        return { ok: false, reason: 'locked', until: row.lockedUntil.toISOString() }
+      }
+      return { ok: false, reason: 'invalid' }
+    }
+    if (await verifyPin(data.pin, claim.pinHash)) {
       await sql`update sessions set failed_attempts = 0, lock_level = 0, locked_until = null where slug = ${data.slug}`
-      grantAccess(data.slug, s.pinHash)
+      grantAccess(data.slug, claim.pinHash)
       return { ok: true }
     }
-    // Atomic increment so parallel guesses cannot share one counter value
-    const [f] = await sql<{ failedAttempts: number; lockLevel: number }[]>`
-      update sessions set failed_attempts = failed_attempts + 1
-      where slug = ${data.slug} returning failed_attempts, lock_level`
-    if (f.failedAttempts < MAX_FAILS) return { ok: false, reason: 'invalid' }
-    const minutes = Math.min(15 * 2 ** f.lockLevel, 24 * 60)
+    if (claim.failedAttempts < MAX_FAILS) return { ok: false, reason: 'invalid' }
+    const minutes = Math.min(15 * 2 ** claim.lockLevel, 24 * 60)
     const [l] = await sql<{ lockedUntil: Date }[]>`
       update sessions set failed_attempts = 0, lock_level = lock_level + 1,
         locked_until = now() + make_interval(mins => ${minutes})
       where slug = ${data.slug} returning locked_until`
+    if (!l) return { ok: false, reason: 'invalid' } // session deleted mid-request
     return { ok: false, reason: 'locked', until: l.lockedUntil.toISOString() }
   })
 
