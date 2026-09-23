@@ -19,7 +19,7 @@ const getRecognition = () => {
 }
 
 // Web Speech API dictation; renders nothing where unsupported (e.g. Firefox)
-export function VoiceButton({ value, onChange }: { value: string; onChange: (text: string) => void }) {
+export function VoiceButton({ value, onChange, label = 'Ditar tarefa' }: { value: string; onChange: (text: string) => void; label?: string }) {
   const [supported, setSupported] = useState(false)
   const [listening, setListening] = useState(false)
   const rec = useRef<Recognition | null>(null)
@@ -53,13 +53,16 @@ export function VoiceButton({ value, onChange }: { value: string; onChange: (tex
     setListening(true)
   }
 
+  // Keep focus in the field being dictated into: blurring an inline edit would save and close it
   return (
     <button
       type="button"
       onClick={toggle}
+      onPointerDown={(e) => e.preventDefault()}
+      onMouseDown={(e) => e.preventDefault()}
       aria-pressed={listening}
-      aria-label={listening ? 'Parar ditado' : 'Ditar tarefa'}
-      title={listening ? 'Parar ditado' : 'Ditar tarefa'}
+      aria-label={listening ? 'Parar ditado' : label}
+      title={listening ? 'Parar ditado' : label}
       className={`relative grid size-10 shrink-0 place-items-center rounded-full ${
         listening ? 'bg-accent text-surface' : 'text-ink-soft hover:bg-accent-soft hover:text-accent'
       }`}
