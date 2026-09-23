@@ -1,0 +1,98 @@
+import { useLiveQuery } from '@tanstack/react-db'
+import { useNavigate } from '@tanstack/react-router'
+import { useState, type FormEvent } from 'react'
+import { useActions } from '#/data/actions'
+import { useSource } from '#/data/source-context'
+import { LIMITS } from '#/lib/types'
+import { PageLink } from './links'
+import { Menu, MenuItem } from './Popover'
+import { ProgressBar } from './ProgressBar'
+import { SettingsButton } from './Settings'
+
+export function PagesView() {
+  const source = useSource()
+  const a = useActions()
+  const navigate = useNavigate()
+  const [title, setTitle] = useState('')
+  const { data: pages } = useLiveQuery((q) => q.from({ p: source.pages }).orderBy(({ p }) => p.position), [source])
+  const { data: tasks } = useLiveQuery((q) => q.from({ t: source.tasks }), [source])
+
+  const stats = new Map<string, { done: number; total: number }>()
+  for (const t of tasks) {
+    const s = stats.get(t.pageId) ?? { done: 0, total: 0 }
+    s.total++
+    if (t.done) s.done++
+    stats.set(t.pageId, s)
+  }
+
+  const create = (e: FormEvent) => {
+    e.preventDefault()
+    const v = title.trim()
+    if (!v) return
+    const pageId = a.addPage(v)
+    setTitle('')
+    if (source.slug) navigate({ to: '/s/$slug/p/$pageId', params: { slug: source.slug, pageId } })
+    else navigate({ to: '/local/p/$pageId', params: { pageId } })
+  }
+
+  return (
+    <>
+      <header className="flex items-start justify-between gap-3 pt-6 pb-4">
+        <div>
+          <a href="/" className="mb-2 inline-block text-sm text-ink-soft hover:text-accent">
+            ← Início
+          </a>
+          <h1 className="m-0 text-2xl font-extrabold tracking-[-0.01em]">{source.slug ?? 'Sem salvar'}</h1>
+          <p className="m-0 mt-1 text-[0.9rem] text-ink-soft">
+            {source.slug ? 'Sessão sincronizada' : 'Dados só neste navegador'}
+          </p>
+        </div>
+        <SettingsButton />
+      </header>
+      <main className="space-y-2.5">
+        {pages.map((p) => {
+          const s = stats.get(p.id) ?? { done: 0, total: 0 }
+          return (
+            <div key={p.id} className="flex items-start gap-2 rounded-2xl border border-line bg-surface p-4">
+              <PageLink source={source} pageId={p.id} className="min-w-0 flex-1">
+                <h2 className="m-0 text-[1.02rem] font-bold">{p.title}</h2>
+                {p.subtitle && <p className="m-0 mt-0.5 truncate text-[0.82rem] text-ink-soft">{p.subtitle}</p>}
+                <div className="mt-3">
+                  <ProgressBar small done={s.done} total={s.total} />
+                </div>
+              </PageLink>
+              <Menu label="Ações da página">
+                {(close) => (
+                  <>
+                    <MenuItem onClick={() => (a.movePage(pages, p.id, -1), close())}>↑ Subir</MenuItem>
+                    <MenuItem onClick={() => (a.movePage(pages, p.id, 1), close())}>↓ Descer</MenuItem>
+                    <MenuItem
+                      danger
+                      onClick={() => {
+                        close()
+                        if (confirm(`Deletar a página "${p.title}"?`)) a.deletePage(p.id)
+                      }}
+                    >
+                      Deletar
+                    </MenuItem>
+                  </>
+                )}
+              </Menu>
+            </div>
+          )
+        })}
+        <form onSubmit={create} className="flex gap-2 rounded-2xl border border-dashed border-line p-2">
+          <input
+            value={title}
+            onChange={(e) => setTitle(e.target.value)}
+            maxLength={LIMITS.title}
+            placeholder="+ nova página"
+            aria-label="Nova página"
+            className="min-w-0 flex-1 bg-transparent px-2 py-2 font-display font-bold outline-none placeholder:text-ink-soft"
+          />
+          {title.trim() && <button className="rounded-xl bg-accent px-4 font-semibold text-surface">Criar</button>}
+        </form>
+      </main>
+    </>
+  )
+}
