@@ -61,7 +61,7 @@ export function VoiceButton({ value, onChange, label = 'Ditar tarefa' }: { value
       onPointerDown={(e) => e.preventDefault()}
       onMouseDown={(e) => e.preventDefault()}
       aria-pressed={listening}
-      aria-label={listening ? 'Parar ditado' : label}
+      aria-label={label}
       title={listening ? 'Parar ditado' : label}
       className={`relative grid size-10 shrink-0 place-items-center rounded-full ${
         listening ? 'bg-accent text-surface' : 'text-ink-soft hover:bg-accent-soft hover:text-accent'
