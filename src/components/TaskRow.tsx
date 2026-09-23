@@ -1,14 +1,19 @@
-import { ArrowDown, ArrowUp, Plus, Trash2 } from 'lucide-react'
+import { ArrowDown, ArrowUp, CircleDot, Plus, StickyNote, Trash2 } from 'lucide-react'
 import { useState, type FormEvent } from 'react'
 import { useActions } from '#/data/actions'
-import { LIMITS, type Section, type Task } from '#/lib/types'
+import { chipHidden, statusOf } from '#/lib/status'
+import { LIMITS, type Section, type Status, type Task } from '#/lib/types'
 import { InlineEdit } from './InlineEdit'
 import { Menu, MenuItem } from './Popover'
+import { StatusChip, StatusOptions, StatusPicker } from './Status'
 import { VoiceButton } from './VoiceButton'
 
-export function TaskRow({ task, siblings }: { task: Task; siblings: Task[] }) {
+export function TaskRow({ task, siblings, statuses }: { task: Task; siblings: Task[]; statuses: Status[] }) {
   const a = useActions()
+  const [menu, setMenu] = useState<'actions' | 'status'>('actions')
+  const [editingNote, setEditingNote] = useState(false)
   const i = siblings.findIndex((t) => t.id === task.id)
+  const status = statusOf(task, statuses)
 
   return (
     <div className="group flex items-start gap-2.5 border-t border-line py-2 pl-1 first:border-t-0">
@@ -31,21 +36,55 @@ export function TaskRow({ task, siblings }: { task: Task; siblings: Task[] }) {
           onSave={(text) => a.updateTask(task.id, { text })}
           className={task.done ? 'text-ink-soft line-through decoration-ink-soft/40' : ''}
         />
-      </div>
-      <Menu label="Ações da tarefa" quiet>
-        {(close) => (
-          <>
-            <MenuItem icon={ArrowUp} disabled={i <= 0} onClick={() => (a.moveTask(siblings, task.id, -1), close())}>
-              Subir
-            </MenuItem>
-            <MenuItem icon={ArrowDown} disabled={i >= siblings.length - 1} onClick={() => (a.moveTask(siblings, task.id, 1), close())}>
-              Descer
-            </MenuItem>
-            <MenuItem icon={Trash2} danger onClick={() => (a.deleteTask(task.id), close())}>
-              Deletar tarefa
-            </MenuItem>
-          </>
+        {status && !chipHidden(task, statuses) && (
+          <StatusPicker
+            task={task}
+            statuses={statuses}
+            trigger={(p) => <StatusChip {...p} status={status} aria-label={`Status: ${status.name}. Alterar`} className="ml-1.5" />}
+          />
         )}
+        {(task.note || editingNote) && (
+          <div className="mt-0.5 text-[0.82rem] leading-snug text-ink-soft">
+            <InlineEdit
+              key={String(editingNote)}
+              value={task.note}
+              multiline
+              placeholder="Nota da tarefa…"
+              label="Nota da tarefa"
+              maxLength={LIMITS.taskNote}
+              startEditing={editingNote}
+              onDone={() => setEditingNote(false)}
+              onSave={(note) => a.updateTask(task.id, { note })}
+              voice="Ditar nota"
+              viewClassName="block line-clamp-2"
+            />
+          </div>
+        )}
+      </div>
+      <Menu label="Ações da tarefa" quiet onClose={() => setMenu('actions')}>
+        {(close) =>
+          menu === 'status' ? (
+            <StatusOptions task={task} statuses={statuses} onDone={close} />
+          ) : (
+            <>
+              <MenuItem icon={ArrowUp} disabled={i <= 0} onClick={() => (a.moveTask(siblings, task.id, -1), close())}>
+                Subir
+              </MenuItem>
+              <MenuItem icon={ArrowDown} disabled={i >= siblings.length - 1} onClick={() => (a.moveTask(siblings, task.id, 1), close())}>
+                Descer
+              </MenuItem>
+              <MenuItem icon={CircleDot} onClick={() => setMenu('status')}>
+                Status{status ? `: ${status.name}` : ''}
+              </MenuItem>
+              <MenuItem icon={StickyNote} onClick={() => (setEditingNote(true), close())}>
+                {task.note ? 'Editar nota' : 'Adicionar nota'}
+              </MenuItem>
+              <MenuItem icon={Trash2} danger onClick={() => (a.deleteTask(task.id), close())}>
+                Deletar tarefa
+              </MenuItem>
+            </>
+          )
+        }
       </Menu>
     </div>
   )

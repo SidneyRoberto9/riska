@@ -21,6 +21,10 @@ export function ChecklistView({ pageId }: { pageId: string }) {
     (q) => q.from({ t: source.tasks }).where(({ t }) => eq(t.pageId, pageId)).orderBy(({ t }) => t.position),
     [source, pageId],
   )
+  const { data: statuses } = useLiveQuery(
+    (q) => q.from({ s: source.statuses }).where(({ s }) => eq(s.pageId, pageId)).orderBy(({ s }) => s.position),
+    [source, pageId],
+  )
 
   // Local mode only: pages saved before statuses existed get the defaults once
   useEffect(() => {
@@ -80,7 +84,7 @@ export function ChecklistView({ pageId }: { pageId: string }) {
           <p className="mb-3.5 text-[0.9rem] text-ink-soft">Comece criando uma seção, como “Hortifruti” ou “Hoje”.</p>
         )}
         {sections.map((s, i) => (
-          <SectionCard key={s.id} section={s} index={i} siblings={sections} tasks={bySection.get(s.id) ?? []} />
+          <SectionCard key={s.id} section={s} index={i} siblings={sections} tasks={bySection.get(s.id) ?? []} statuses={statuses} />
         ))}
         <NewSection onAdd={(title) => a.addSection(page.id, title)} />
       </main>

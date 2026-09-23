@@ -1,7 +1,7 @@
 import { ArrowDown, ArrowUp, Highlighter, StickyNote, Trash2 } from 'lucide-react'
 import { useState } from 'react'
 import { useActions } from '#/data/actions'
-import { LIMITS, type Section, type Task } from '#/lib/types'
+import { LIMITS, type Section, type Status, type Task } from '#/lib/types'
 import { InlineEdit } from './InlineEdit'
 import { Menu, MenuItem } from './Popover'
 import { NewTaskInput, TaskRow } from './TaskRow'
@@ -11,11 +11,13 @@ export function SectionCard({
   index,
   siblings,
   tasks,
+  statuses,
 }: {
   section: Section
   index: number
   siblings: Section[]
   tasks: Task[]
+  statuses: Status[]
 }) {
   const a = useActions()
   const [editingNote, setEditingNote] = useState(false)
@@ -85,7 +87,7 @@ export function SectionCard({
         </div>
       )}
       {tasks.map((t) => (
-        <TaskRow key={t.id} task={t} siblings={tasks} />
+        <TaskRow key={t.id} task={t} siblings={tasks} statuses={statuses} />
       ))}
       <NewTaskInput section={section} />
     </section>
