@@ -55,13 +55,20 @@ export function useActions() {
   // A task that changes column lands at the bottom of it
   const boardEnd = (pageId: string) =>
     nextPosition(all(tasks).filter((t) => t.pageId === pageId).map((t) => ({ position: t.boardPosition ?? 0 })))
+  // Server mode: a status insert just fired for this render still in flight; a task update naming it
+  // as statusId fails the server's FK-style check (0 rows) if it lands first, and the next refetch then
+  // silently reverts the optimistic move. Mirrors addPage's wait for the same insert-then-reference race.
+  const pendingStatus = new Map<string, Promise<void>>()
   const setTaskState = (task: Task, changes: Partial<Task>) => {
     if (!tasks.has(task.id)) return
     // Compare against the resolved column, not the raw field: a null statusId that already resolves
     // to the first column (e.g. re-checking a task already in it) is not a move
     const moved = changes.statusId !== undefined && changes.statusId !== statusOf(task, pageStatuses(task.pageId))?.id
     const extra = moved ? { boardPosition: boardEnd(task.pageId) } : {}
-    run(() => tasks.update(task.id, (d) => void Object.assign(d, changes, extra)))
+    const write = () => run(() => tasks.update(task.id, (d) => void Object.assign(d, changes, extra)))
+    const pending = changes.statusId ? pendingStatus.get(changes.statusId) : undefined
+    if (pending) pending.then(write)
+    else write()
   }
   const tasksInColumn = (status: Status) => {
     const list = pageStatuses(status.pageId)
@@ -120,7 +127,8 @@ export function useActions() {
 
     addStatus(pageId: string, draft: StatusDraft) {
       const id = newId()
-      run(() => statuses.insert({ ...draft, id, pageId, position: nextPosition(pageStatuses(pageId)) }))
+      const tx = run(() => statuses.insert({ ...draft, id, pageId, position: nextPosition(pageStatuses(pageId)) }))
+      if (source.slug && tx) pendingStatus.set(id, tx.isPersisted.promise.then(() => {}, () => {}))
       return id
     },
     // Flipping a column's "done" flag re-syncs the checkbox of every task in it
