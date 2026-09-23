@@ -33,7 +33,7 @@ export function TaskRow({ task, siblings, statuses }: { task: Task; siblings: Ta
       >
         <GripVertical size={15} aria-hidden />
       </button>
-      <label className="-my-3 -mr-1 cursor-pointer py-3 pr-1">
+      <label className="-my-3 -ml-1.5 -mr-2.5 cursor-pointer py-3 pr-2.5 pl-1.5">
         <input
           type="checkbox"
           className="check"

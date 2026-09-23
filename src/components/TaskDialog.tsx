@@ -66,7 +66,7 @@ export function TaskDialog({ task, statuses, section, onClose }: { task: Task; s
     >
       <div className="flex max-h-[inherit] flex-col">
         <header className="flex items-start gap-3 border-b border-line p-4 pr-3">
-          <label className="-m-2 mt-0 cursor-pointer p-2">
+          <label className="-m-2.75 -mt-0.75 cursor-pointer p-2.75">
             <input type="checkbox" className="check" checked={task.done} onChange={(e) => a.setTaskDone(task, e.target.checked)} aria-label="Concluída" />
           </label>
           <h2 id={titleId} className="m-0 min-w-0 flex-1 text-[1.15rem] leading-snug font-bold">

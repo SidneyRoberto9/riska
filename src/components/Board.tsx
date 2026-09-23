@@ -127,7 +127,7 @@ function Column({
           {...attributes}
           {...listeners}
           aria-label={`Arrastar coluna: ${status.name}`}
-          className="drag-handle grid size-8 shrink-0 cursor-grab touch-none place-items-center rounded-md text-ink-soft"
+          className="drag-handle -my-1 -ml-1 grid size-10 shrink-0 cursor-grab touch-none place-items-center rounded-md text-ink-soft"
         >
           <GripVertical size={16} aria-hidden />
         </button>
@@ -182,7 +182,7 @@ function CardFace({ task, sectionTitle }: { task: Task; sectionTitle?: string })
   return (
     <div className="rounded-xl border border-line bg-surface p-2.5 shadow-sm">
       <div className="flex items-start gap-2">
-        <span aria-hidden className="-m-2 p-2">
+        <span aria-hidden className="-m-2.75 p-2.75">
           <input type="checkbox" className="check" checked={task.done} readOnly tabIndex={-1} />
         </span>
         <p className={`m-0 min-w-0 flex-1 text-[0.9rem] leading-snug break-words line-clamp-3 ${task.done ? 'text-ink-soft line-through decoration-ink-soft/40' : ''}`}>
@@ -218,7 +218,7 @@ function Card({ task, statuses, sectionTitle, onOpen }: { task: Task; statuses: 
       className={`group cursor-grab rounded-xl border border-line bg-surface p-2.5 shadow-sm transition-shadow hover:shadow-md ${isDragging ? 'drag-ghost' : ''}`}
     >
       <div className="flex items-start gap-2">
-        <label data-no-drag className="-m-2 cursor-pointer p-2">
+        <label data-no-drag className="-m-2.75 cursor-pointer p-2.75">
           <input type="checkbox" className="check" checked={task.done} onChange={(e) => a.setTaskDone(task, e.target.checked)} aria-label={`Concluída: ${task.text}`} />
         </label>
         {/* Enter opens the details; Space lifts the card (keyboard drag starts only from this activator) */}
@@ -342,7 +342,7 @@ function AddCard({ status, sections }: { status: Status; sections: Section[] }) 
               } catch {}
             }}
             aria-label="Seção"
-            className="min-h-9 min-w-0 flex-1 rounded-lg border border-line bg-ground px-2 text-sm"
+            className="min-h-10 min-w-0 flex-1 rounded-lg border border-line bg-ground px-2 text-sm"
           >
             {sections.map((s) => (
               <option key={s.id} value={s.id}>
@@ -351,10 +351,10 @@ function AddCard({ status, sections }: { status: Status; sections: Section[] }) 
             ))}
           </select>
         )}
-        <button disabled={!text.trim()} className="ml-auto min-h-9 rounded-lg bg-accent px-3 text-sm font-semibold text-surface disabled:opacity-40">
+        <button disabled={!text.trim()} className="ml-auto min-h-10 rounded-lg bg-accent px-3 text-sm font-semibold text-surface disabled:opacity-40">
           Adicionar
         </button>
-        <button type="button" onClick={hide} aria-label="Fechar" className="grid size-9 place-items-center rounded-lg text-ink-soft hover:bg-accent-soft">
+        <button type="button" onClick={hide} aria-label="Fechar" className="grid size-10 place-items-center rounded-lg text-ink-soft hover:bg-accent-soft">
           <X size={16} aria-hidden />
         </button>
       </div>
