@@ -35,6 +35,8 @@ export function ChecklistView({ pageId, view, taskId }: { pageId: string; view?:
   // Local mode only: pages saved before statuses existed get the defaults once
   useEffect(() => {
     if (isReady && pages[0]) a.upgradeLocalPage(pageId)
+    // `a` is rebuilt every render and pages[0].id is pageId: run once per loaded page
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [isReady, pages[0]?.id])
 
   const setSearch = useSetPageSearch()
