@@ -1,14 +1,16 @@
-import { ArrowDown, ArrowUp, CircleDot, Plus, StickyNote, Trash2 } from 'lucide-react'
+import { ArrowDown, ArrowUp, CircleDot, GripVertical, Plus, StickyNote, Trash2 } from 'lucide-react'
 import { useState, type FormEvent } from 'react'
 import { useActions } from '#/data/actions'
 import { chipHidden, statusOf } from '#/lib/status'
 import { LIMITS, type Section, type Status, type Task } from '#/lib/types'
+import { useSortableItem } from './dnd'
 import { InlineEdit } from './InlineEdit'
 import { Menu, MenuItem } from './Popover'
 import { StatusChip, StatusOptions, StatusPicker } from './Status'
 import { VoiceButton } from './VoiceButton'
 
 export function TaskRow({ task, siblings, statuses }: { task: Task; siblings: Task[]; statuses: Status[] }) {
+  const { setNodeRef, setActivatorNodeRef, attributes, listeners, style, isDragging } = useSortableItem(task.id, 'tarefa arrastável')
   const a = useActions()
   const [menu, setMenu] = useState<'actions' | 'status'>('actions')
   const [editingNote, setEditingNote] = useState(false)
@@ -16,8 +18,22 @@ export function TaskRow({ task, siblings, statuses }: { task: Task; siblings: Ta
   const status = statusOf(task, statuses)
 
   return (
-    <div className="group flex items-start gap-2.5 border-t border-line py-2 pl-1 first:border-t-0">
-      <label className="-m-3 cursor-pointer p-3">
+    <div
+      ref={setNodeRef}
+      style={style}
+      className={`group flex items-start gap-1.5 border-t border-line py-2 first:border-t-0 ${isDragging ? 'drag-ghost' : ''}`}
+    >
+      <button
+        type="button"
+        ref={setActivatorNodeRef}
+        {...attributes}
+        {...listeners}
+        aria-label={`Arrastar tarefa: ${task.text}`}
+        className="drag-handle -ml-1.5 grid h-7 w-6 shrink-0 cursor-grab touch-none place-items-center rounded-md text-ink-soft"
+      >
+        <GripVertical size={15} aria-hidden />
+      </button>
+      <label className="-my-3 -mr-1 cursor-pointer py-3 pr-1">
         <input
           type="checkbox"
           className="check"
@@ -26,7 +42,7 @@ export function TaskRow({ task, siblings, statuses }: { task: Task; siblings: Ta
           aria-label={`Concluída: ${task.text}`}
         />
       </label>
-      <div className="min-w-0 flex-1 text-[0.92rem] leading-[1.42]">
+      <div className="ml-1 min-w-0 flex-1 text-[0.92rem] leading-[1.42]">
         <InlineEdit
           value={task.text}
           required

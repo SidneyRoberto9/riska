@@ -4,6 +4,7 @@ import { useEffect, useState, type FormEvent } from 'react'
 import { useActions } from '#/data/actions'
 import { useSource } from '#/data/source-context'
 import { LIMITS, type Task } from '#/lib/types'
+import { DragPreview, SortableBoard, SortableColumns } from './dnd'
 import { InlineEdit } from './InlineEdit'
 import { PagesLink } from './links'
 import { ProgressBar } from './ProgressBar'
@@ -47,6 +48,8 @@ export function ChecklistView({ pageId }: { pageId: string }) {
 
   const bySection = new Map<string, Task[]>()
   for (const t of tasks) bySection.set(t.sectionId, [...(bySection.get(t.sectionId) ?? []), t])
+  const taskById = new Map(tasks.map((t) => [t.id, t]))
+  const sectionById = new Map(sections.map((s) => [s.id, s]))
   const done = tasks.filter((t) => t.done).length
 
   return (
@@ -83,9 +86,24 @@ export function ChecklistView({ pageId }: { pageId: string }) {
         {sections.length === 0 && (
           <p className="mb-3.5 text-[0.9rem] text-ink-soft">Comece criando uma seção, como “Hortifruti” ou “Hoje”.</p>
         )}
-        {sections.map((s, i) => (
-          <SectionCard key={s.id} section={s} index={i} siblings={sections} tasks={bySection.get(s.id) ?? []} statuses={statuses} />
-        ))}
+        <SortableBoard
+          columns={sections.map((s) => ({ id: s.id, items: (bySection.get(s.id) ?? []).map((t) => t.id) }))}
+          onItemsCommit={({ id, from, to, order }) => a.reorderTasks(order, from !== to ? { id, sectionId: to } : undefined)}
+          onColumnsCommit={a.reorderSections}
+          label={(kind, id) => (kind === 'item' ? `tarefa “${taskById.get(id)?.text ?? ''}”` : `seção “${sectionById.get(id)?.title ?? ''}”`)}
+          renderOverlay={(kind, id) =>
+            kind === 'item' ? <DragPreview>{taskById.get(id)?.text}</DragPreview> : <DragPreview strong>{sectionById.get(id)?.title}</DragPreview>
+          }
+        >
+          <SortableColumns>
+            {(ids) =>
+              ids.map((id, i) => {
+                const s = sectionById.get(id)
+                return s && <SectionCard key={id} section={s} index={i} siblings={sections} taskById={taskById} statuses={statuses} />
+              })
+            }
+          </SortableColumns>
+        </SortableBoard>
         <NewSection onAdd={(title) => a.addSection(page.id, title)} />
       </main>
       <footer className="pt-2 text-center text-[0.78rem] text-ink-soft">

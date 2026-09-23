@@ -1,7 +1,8 @@
-import { ArrowDown, ArrowUp, Highlighter, StickyNote, Trash2 } from 'lucide-react'
+import { ArrowDown, ArrowUp, GripVertical, Highlighter, StickyNote, Trash2 } from 'lucide-react'
 import { useState } from 'react'
 import { useActions } from '#/data/actions'
 import { LIMITS, type Section, type Status, type Task } from '#/lib/types'
+import { ColumnItems, useSortableColumn } from './dnd'
 import { InlineEdit } from './InlineEdit'
 import { Menu, MenuItem } from './Popover'
 import { NewTaskInput, TaskRow } from './TaskRow'
@@ -10,26 +11,39 @@ export function SectionCard({
   section,
   index,
   siblings,
-  tasks,
+  taskById,
   statuses,
 }: {
   section: Section
   index: number
   siblings: Section[]
-  tasks: Task[]
+  taskById: Map<string, Task>
   statuses: Status[]
 }) {
   const a = useActions()
   const [editingNote, setEditingNote] = useState(false)
+  const { setNodeRef, setActivatorNodeRef, attributes, listeners, style, isDragging } = useSortableColumn(section.id)
   const i = siblings.findIndex((s) => s.id === section.id)
 
   return (
     <section
+      ref={setNodeRef}
+      style={style}
       className={`mb-3.5 rounded-2xl border px-[18px] pt-[18px] pb-2 ${
         section.highlight ? 'border-transparent bg-warn-soft' : 'border-line bg-surface'
-      }`}
+      } ${isDragging ? 'drag-ghost' : ''}`}
     >
-      <div className="mb-2.5 flex items-baseline gap-2">
+      <div className="group mb-2.5 flex items-baseline gap-2">
+        <button
+          type="button"
+          ref={setActivatorNodeRef}
+          {...attributes}
+          {...listeners}
+          aria-label={`Arrastar seção: ${section.title}`}
+          className="drag-handle -ml-3 grid size-7 shrink-0 cursor-grab touch-none place-items-center self-center rounded-md text-ink-soft"
+        >
+          <GripVertical size={16} aria-hidden />
+        </button>
         <span className={`font-display text-[0.85rem] font-extrabold ${section.highlight ? 'text-warn' : 'text-accent'}`}>
           {index + 1}
         </span>
@@ -86,10 +100,19 @@ export function SectionCard({
           />
         </div>
       )}
-      {tasks.map((t) => (
-        <TaskRow key={t.id} task={t} siblings={tasks} statuses={statuses} />
-      ))}
-      <NewTaskInput section={section} />
+      <ColumnItems id={section.id}>
+        {(ids) => {
+          const tasks = ids.flatMap((id) => taskById.get(id) ?? [])
+          return (
+            <>
+              {tasks.map((t) => (
+                <TaskRow key={t.id} task={t} siblings={tasks} statuses={statuses} />
+              ))}
+              <NewTaskInput section={section} />
+            </>
+          )
+        }}
+      </ColumnItems>
     </section>
   )
 }
