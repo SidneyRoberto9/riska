@@ -28,7 +28,7 @@ function Home() {
   useEffect(() => setRecent(readRecent()), [])
 
   return (
-    <div className="mx-auto max-w-[720px] space-y-3.5 px-4 pt-10 pb-12">
+    <div className="mx-auto max-w-[1440px] space-y-3.5 px-4 pt-10 pb-12 sm:px-6">
       <header className="mb-6">
         <h1 className="m-0 text-3xl font-extrabold tracking-[-0.01em]">Checklist</h1>
         <p className="m-0 mt-1 text-ink-soft">Listas simples, sincronizadas entre celular e PC.</p>

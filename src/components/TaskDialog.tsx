@@ -84,7 +84,7 @@ export function TaskDialog({
     >
       <div className="flex max-h-[inherit] flex-col">
         <header className="flex items-start gap-3 border-b border-line p-4 pr-3">
-          <label className="-m-2.75 -mt-0.75 cursor-pointer p-2.75">
+          <label className="-m-2.75 -mt-2.25 cursor-pointer p-2.75">
             <input
               type="checkbox"
               className="check"
@@ -109,13 +109,13 @@ export function TaskDialog({
             type="button"
             onClick={() => ref.current?.close()}
             aria-label="Fechar"
-            className="-mt-1.5 grid size-10 shrink-0 place-items-center rounded-lg text-ink-soft hover:bg-accent-soft hover:text-accent"
+            className="-mt-2 grid size-10 shrink-0 place-items-center rounded-lg text-ink-soft hover:bg-accent-soft hover:text-accent"
           >
             <X size={18} aria-hidden />
           </button>
         </header>
 
-        <div className="flex-1 space-y-5 overflow-y-auto overscroll-contain p-4">
+        <div className="flex-1 space-y-5 overflow-x-hidden overflow-y-auto overscroll-contain p-4">
           <dl className="m-0 grid grid-cols-[auto_1fr] items-center gap-x-5 gap-y-2.5 text-sm">
             <dt className="text-ink-soft">Status</dt>
             <dd className="m-0">

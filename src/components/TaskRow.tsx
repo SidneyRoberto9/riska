@@ -128,7 +128,7 @@ export function NewTaskInput({ section }: { section: Section }) {
     setText("")
   }
   return (
-    <form onSubmit={submit} className="flex items-center gap-2.5 border-t border-line py-1.5 pl-1">
+    <form onSubmit={submit} className="flex items-center gap-1.5 border-t border-line py-1.5 pl-1">
       <Plus size={19} aria-hidden className="shrink-0 text-ink-soft" />
       <input
         value={text}
@@ -137,7 +137,7 @@ export function NewTaskInput({ section }: { section: Section }) {
         placeholder="Nova tarefa…"
         autoComplete="off"
         aria-label="Nova tarefa"
-        className="min-w-0 flex-1 bg-transparent rounded-md py-1.5 text-[0.92rem] placeholder:text-ink-soft"
+        className="min-w-0 flex-1 rounded-md bg-transparent px-3 py-1.5 text-[0.92rem] placeholder:text-ink-soft"
       />
       <VoiceButton value={text} onChange={setText} />
     </form>

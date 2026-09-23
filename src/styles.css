@@ -256,3 +256,20 @@
     translate: 0 100%;
   }
 }
+
+/* Board: no visible scrollbar (drag, wheel, swipe or keyboard scroll it); the side with more columns fades out */
+.board-scroll {
+  scrollbar-width: none;
+  --fade-l: 0px;
+  --fade-r: 0px;
+  mask-image: linear-gradient(to right, transparent, #000 var(--fade-l), #000 calc(100% - var(--fade-r)), transparent);
+}
+.board-scroll::-webkit-scrollbar {
+  display: none;
+}
+.board-scroll[data-more-start] {
+  --fade-l: 48px;
+}
+.board-scroll[data-more-end] {
+  --fade-r: 48px;
+}

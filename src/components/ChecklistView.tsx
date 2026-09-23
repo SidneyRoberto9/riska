@@ -126,15 +126,21 @@ export function ChecklistView({ pageId, view, taskId }: { pageId: string; view?:
           <ChevronLeft size={16} aria-hidden />
           Páginas
         </PagesLink>
-        <h1 className="m-0 mb-1 text-2xl font-extrabold tracking-[-0.01em]">
-          <InlineEdit
-            value={page.title}
-            required
-            maxLength={LIMITS.title}
-            label="Título da página"
-            onSave={(title) => a.updatePage(page.id, { title })}
-          />
-        </h1>
+        <div className="mb-1 flex items-center gap-3">
+          <h1 className="m-0 min-w-0 flex-1 text-2xl font-extrabold tracking-[-0.01em]">
+            <InlineEdit
+              value={page.title}
+              required
+              maxLength={LIMITS.title}
+              label="Título da página"
+              onSave={(title) => a.updatePage(page.id, { title })}
+            />
+          </h1>
+          {/* Negative margin: the toggle is taller than the title line and shouldn't push the subtitle down */}
+          <div className="-my-2 shrink-0">
+            <ViewToggle view={view} />
+          </div>
+        </div>
         <p className="m-0 mb-3.5 text-[0.9rem] text-ink-soft">
           <InlineEdit
             value={page.subtitle}
@@ -144,12 +150,7 @@ export function ChecklistView({ pageId, view, taskId }: { pageId: string; view?:
             onSave={(subtitle) => a.updatePage(page.id, { subtitle })}
           />
         </p>
-        <div className="flex items-center gap-3">
-          <div className="min-w-0 flex-1">
-            <ProgressBar done={done} total={tasks.length} />
-          </div>
-          <ViewToggle view={view} />
-        </div>
+        <ProgressBar done={done} total={tasks.length} />
       </header>
       <main>
         {view === "quadro" ? (

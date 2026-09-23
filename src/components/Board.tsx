@@ -29,6 +29,7 @@ import {
 import { InlineEdit } from "./InlineEdit"
 import { Menu, MenuItem, Popover } from "./Popover"
 import { StatusEditor, StatusOptions } from "./Status"
+import { useDragScroll } from "./useDragScroll"
 import { VoiceButton } from "./VoiceButton"
 
 const COLUMN_W = "w-[min(85vw,300px)]"
@@ -51,6 +52,7 @@ export function Board({
 }) {
   const a = useActions()
   const setSearch = useSetPageSearch()
+  const scroller = useDragScroll<HTMLDivElement>()
 
   if (!sections.length) {
     return (
@@ -105,7 +107,14 @@ export function Board({
         return <DragPreview strong>{statusById.get(id)?.name}</DragPreview>
       }}
     >
-      <div className="-mx-4 flex snap-x snap-mandatory items-start gap-3 overflow-x-auto scroll-px-4 px-4 pb-6 sm:-mx-6 sm:snap-none sm:px-6">
+      <div
+        ref={scroller.ref}
+        data-more-start={scroller.edges.start || undefined}
+        data-more-end={scroller.edges.end || undefined}
+        className={`board-scroll -mx-4 flex snap-x snap-mandatory items-start gap-3 overflow-x-auto scroll-px-4 px-4 pb-6 sm:-mx-6 sm:snap-none sm:px-6 ${
+          scroller.panning ? "cursor-grabbing select-none" : scroller.scrollable ? "cursor-grab" : ""
+        }`}
+      >
         <SortableColumns>
           {(ids) =>
             ids.map((id) => {
@@ -432,7 +441,7 @@ function AddCard({ status, sections }: { status: Status; sections: Section[] }) 
           placeholder="Nova tarefa…"
           aria-label={`Nova tarefa em ${status.name}`}
           autoComplete="off"
-          className="min-w-0 flex-1 rounded-md bg-transparent px-1 py-1.5 text-[0.9rem] outline-none placeholder:text-ink-soft"
+          className="min-w-0 flex-1 rounded-md bg-transparent px-2.5 py-1.5 text-[0.9rem] outline-none placeholder:text-ink-soft"
         />
         <VoiceButton value={text} onChange={setText} />
       </div>
