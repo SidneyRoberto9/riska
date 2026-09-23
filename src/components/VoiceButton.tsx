@@ -58,7 +58,7 @@ export function VoiceButton({ value, onChange }: { value: string; onChange: (tex
       onClick={toggle}
       aria-pressed={listening}
       aria-label={listening ? 'Parar ditado' : 'Ditar tarefa'}
-      className={`grid size-9 shrink-0 place-items-center rounded-lg ${listening ? 'animate-pulse bg-accent-soft' : 'opacity-70 hover:opacity-100'}`}
+      className={`grid size-10 shrink-0 place-items-center rounded-lg ${listening ? 'animate-pulse bg-accent-soft' : 'opacity-70 hover:opacity-100'}`}
     >
       🎤
     </button>

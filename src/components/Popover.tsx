@@ -58,7 +58,7 @@ export function Menu({ label, children }: { label: string; children: (close: () 
         <button
           {...p}
           aria-label={label}
-          className="-my-1.5 grid size-9 shrink-0 place-items-center rounded-lg text-lg leading-none text-ink-soft hover:bg-accent-soft hover:text-accent"
+          className="-my-1.5 grid size-10 shrink-0 place-items-center rounded-lg text-lg leading-none text-ink-soft hover:bg-accent-soft hover:text-accent"
         >
           ⋯
         </button>

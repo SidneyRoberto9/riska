@@ -13,7 +13,7 @@ export function TaskRow({ task, siblings }: { task: Task; siblings: Task[] }) {
 
   return (
     <div className="flex items-start gap-2.5 border-t border-line py-2 pl-1 first:border-t-0">
-      <label className="-m-2.5 cursor-pointer p-2.5">
+      <label className="-m-3 cursor-pointer p-3">
         <input
           type="checkbox"
           className="check"
