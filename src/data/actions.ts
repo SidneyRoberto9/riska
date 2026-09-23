@@ -86,6 +86,7 @@ export function useActions() {
     if (first && ids[0] !== first.id) {
       const live = new Set(list.map((s) => s.id))
       const loose = all(tasks).filter((t) => t.pageId === pageId && !live.has(t.statusId ?? '')).map((t) => t.id)
+      // Separate transaction: tasks and statuses are different collections, persisted by different server functions
       if (loose.length) run(() => tasks.update(loose, (ds) => ds.forEach((d) => void (d.statusId = first.id))))
     }
     run(() => reorderTx(statuses, ids, 'position'))
