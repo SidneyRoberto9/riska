@@ -12,10 +12,12 @@ export function Popover({
   trigger,
   children,
   className = '',
+  onClose,
 }: {
   trigger: (props: TriggerProps) => ReactNode
   children: (close: () => void) => ReactNode
   className?: string
+  onClose?: () => void
 }) {
   const id = useId()
   const btn = useRef<HTMLButtonElement>(null)
@@ -42,7 +44,11 @@ export function Popover({
         id={id}
         popover="auto"
         className={`fixed max-w-[calc(100vw-16px)] text-sm ${className}`}
-        onToggle={(e) => setOpen(e.newState === 'open')}
+        onToggle={(e) => {
+          const isOpen = e.newState === 'open'
+          setOpen(isOpen)
+          if (!isOpen) onClose?.()
+        }}
       >
         {open && children(() => pop.current?.hidePopover())}
       </div>
@@ -50,10 +56,19 @@ export function Popover({
   )
 }
 
-export function Menu({ label, children }: { label: string; children: (close: () => void) => ReactNode }) {
+export function Menu({
+  label,
+  children,
+  onClose,
+}: {
+  label: string
+  children: (close: () => void) => ReactNode
+  onClose?: () => void
+}) {
   return (
     <Popover
       className="min-w-48 p-1"
+      onClose={onClose}
       trigger={(p) => (
         <button
           {...p}
