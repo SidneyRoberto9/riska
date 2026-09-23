@@ -19,6 +19,7 @@ export type Source = {
 }
 
 type Fn<I> = (opts: { data: I }) => Promise<unknown>
+type Serial = <R>(f: () => Promise<R>) => Promise<R>
 
 // Query keys are shared with route loaders so SSR-prefetched data seeds the collections
 export const queryKeys = {
@@ -40,6 +41,7 @@ function serverCollection<T extends { id: string }>(
     update: Fn<{ slug: string; items: { id: string; changes: Partial<T> }[] }>
     remove?: Fn<{ slug: string; ids: string[] }>
   },
+  serial: Serial,
 ) {
   const list = listFns[name] as unknown as Fn<{ slug: string }>
   return createCollection(
@@ -50,16 +52,19 @@ function serverCollection<T extends { id: string }>(
       queryClient: qc,
       getKey: (x: T) => x.id,
       refetchInterval: 15_000,
+      // Handlers are invoked synchronously by insert/update/delete, so queue order is call order
       onInsert: async ({ transaction }) => {
-        await fns.insert?.({ data: { slug, items: transaction.mutations.map((m) => m.modified) } })
+        await serial(async () => fns.insert?.({ data: { slug, items: transaction.mutations.map((m) => m.modified) } }))
       },
       onUpdate: async ({ transaction }) => {
-        await fns.update({
-          data: { slug, items: transaction.mutations.map((m) => ({ id: m.key as string, changes: m.changes })) },
-        })
+        await serial(() =>
+          fns.update({
+            data: { slug, items: transaction.mutations.map((m) => ({ id: m.key as string, changes: m.changes })) },
+          }),
+        )
       },
       onDelete: async ({ transaction }) => {
-        await fns.remove?.({ data: { slug, ids: transaction.mutations.map((m) => m.key as string) } })
+        await serial(async () => fns.remove?.({ data: { slug, ids: transaction.mutations.map((m) => m.key as string) } }))
       },
     }),
   ) as unknown as Collection<T, string>
@@ -70,16 +75,23 @@ const serverSources = new Map<string, Source>()
 export function getServerSource(qc: QueryClient, slug: string): Source {
   let source = serverSources.get(slug)
   if (!source) {
+    // ponytail: one serial write queue per session — a slow request delays later writes (UI stays optimistic); per-collection ordering isn't enough because rows reference each other
+    let chain: Promise<unknown> = Promise.resolve()
+    const serial: Serial = (f) => {
+      const p = chain.then(f)
+      chain = p.catch(() => {})
+      return p
+    }
     source = {
       slug,
       basePath: `/s/${slug}`,
-      pages: serverCollection<Page>(qc, slug, 'pages', { insert: insertPagesFn, update: updatePagesFn, remove: deletePagesFn }),
-      sections: serverCollection<Section>(qc, slug, 'sections', { insert: insertSectionsFn, update: updateSectionsFn, remove: deleteSectionsFn }),
-      statuses: serverCollection<Status>(qc, slug, 'statuses', { insert: insertStatusesFn, update: updateStatusesFn, remove: deleteStatusesFn }),
-      tasks: serverCollection<Task>(qc, slug, 'tasks', { insert: insertTasksFn, update: updateTasksFn, remove: deleteTasksFn }),
+      pages: serverCollection<Page>(qc, slug, 'pages', { insert: insertPagesFn, update: updatePagesFn, remove: deletePagesFn }, serial),
+      sections: serverCollection<Section>(qc, slug, 'sections', { insert: insertSectionsFn, update: updateSectionsFn, remove: deleteSectionsFn }, serial),
+      statuses: serverCollection<Status>(qc, slug, 'statuses', { insert: insertStatusesFn, update: updateStatusesFn, remove: deleteStatusesFn }, serial),
+      tasks: serverCollection<Task>(qc, slug, 'tasks', { insert: insertTasksFn, update: updateTasksFn, remove: deleteTasksFn }, serial),
       settings: serverCollection<Settings>(qc, slug, 'settings', {
         update: ({ data }) => updateSettingsFn({ data: { slug, changes: data.items[0].changes } }),
-      }),
+      }, serial),
     }
     serverSources.set(slug, source)
   }

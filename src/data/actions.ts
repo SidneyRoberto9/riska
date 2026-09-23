@@ -33,15 +33,13 @@ export function useActions() {
 
   // Every mutation is optimistic; on failure TanStack DB rolls back and we offer a retry
   const run = (mutate: () => Transaction | null) => {
-    const tx = mutate()
-    tx?.isPersisted.promise.catch((err: Error) => {
+    mutate()?.isPersisted.promise.catch((err: Error) => {
       if (err?.message === 'UNAUTHORIZED') {
         router.invalidate()
         return
       }
       toast('Não salvou.', { label: 'Tentar de novo', onClick: () => run(mutate) })
     })
-    return tx
   }
 
   const { pages, sections, statuses, tasks, settings } = source
@@ -55,22 +53,13 @@ export function useActions() {
   // A task that changes column lands at the bottom of it
   const boardEnd = (pageId: string) =>
     nextPosition(all(tasks).filter((t) => t.pageId === pageId).map((t) => ({ position: t.boardPosition ?? 0 })))
-  // Server mode: a status insert just fired for this render still in flight; a task update naming it
-  // as statusId fails the server's FK-style check (0 rows) if it lands first, and the next refetch then
-  // silently reverts the optimistic move. Mirrors addPage's wait for the same insert-then-reference race.
-  const pendingStatus = new Map<string, Promise<unknown>>()
   const setTaskState = (task: Task, changes: Partial<Task>) => {
     if (!tasks.has(task.id)) return
     // Compare against the resolved column, not the raw field: a null statusId that already resolves
     // to the first column (e.g. re-checking a task already in it) is not a move
     const moved = changes.statusId !== undefined && changes.statusId !== statusOf(task, pageStatuses(task.pageId))?.id
     const extra = moved ? { boardPosition: boardEnd(task.pageId) } : {}
-    const write = () => run(() => tasks.update(task.id, (d) => void Object.assign(d, changes, extra)))
-    const pending = changes.statusId ? pendingStatus.get(changes.statusId) : undefined
-    // If the status insert itself failed, skip the write: run() already toasts that failure with a retry,
-    // and writing anyway would reference a status row that was never created
-    if (pending) pending.then(write, () => {})
-    else write()
+    run(() => tasks.update(task.id, (d) => void Object.assign(d, changes, extra)))
   }
   const tasksInColumn = (status: Status) => {
     const list = pageStatuses(status.pageId)
@@ -95,12 +84,8 @@ export function useActions() {
   return {
     addPage(title: string) {
       const id = newId()
-      const page = run(() => pages.insert({ id, title, subtitle: '', position: nextPosition(all(pages)) }))
-      const insertStatuses = () => run(() => statuses.insert(defaultStatuses(id)))
-      // Server mode: pages and statuses are separate POSTs, and a status row has a page FK,
-      // so it must wait for the page insert to land (local mode has no such ordering constraint)
-      if (!source.slug || !page) insertStatuses()
-      else page.isPersisted.promise.then(insertStatuses, () => {})
+      run(() => pages.insert({ id, title, subtitle: '', position: nextPosition(all(pages)) }))
+      run(() => statuses.insert(defaultStatuses(id)))
       return id
     },
     updatePage(id: string, changes: Partial<Omit<Page, 'id'>>) {
@@ -144,8 +129,7 @@ export function useActions() {
 
     addStatus(pageId: string, draft: StatusDraft) {
       const id = newId()
-      const tx = run(() => statuses.insert({ ...draft, id, pageId, position: nextPosition(pageStatuses(pageId)) }))
-      if (source.slug && tx) pendingStatus.set(id, tx.isPersisted.promise)
+      run(() => statuses.insert({ ...draft, id, pageId, position: nextPosition(pageStatuses(pageId)) }))
       return id
     },
     // Flipping a column's "done" flag re-syncs the checkbox of every task in it
