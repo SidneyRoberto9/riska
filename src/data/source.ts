@@ -1,10 +1,10 @@
 import { createCollection, localStorageCollectionOptions, type Collection } from '@tanstack/react-db'
 import { queryCollectionOptions } from '@tanstack/query-db-collection'
 import type { QueryClient } from '@tanstack/react-query'
-import type { Page, Section, Settings, Task } from '#/lib/types'
+import type { Page, Section, Settings, Status, Task } from '#/lib/types'
 import {
-  deletePagesFn, deleteSectionsFn, deleteTasksFn, insertPagesFn, insertSectionsFn, insertTasksFn,
-  listPagesFn, listSectionsFn, listTasksFn, updatePagesFn, updateSectionsFn, updateTasksFn,
+  deletePagesFn, deleteSectionsFn, deleteStatusesFn, deleteTasksFn, insertPagesFn, insertSectionsFn, insertStatusesFn, insertTasksFn,
+  listPagesFn, listSectionsFn, listStatusesFn, listTasksFn, updatePagesFn, updateSectionsFn, updateStatusesFn, updateTasksFn,
 } from '#/server/data'
 import { getSettingsFn, updateSettingsFn } from '#/server/session'
 
@@ -13,6 +13,7 @@ export type Source = {
   basePath: string
   pages: Collection<Page, string>
   sections: Collection<Section, string>
+  statuses: Collection<Status, string>
   tasks: Collection<Task, string>
   settings: Collection<Settings, string>
 }
@@ -23,11 +24,12 @@ type Fn<I> = (opts: { data: I }) => Promise<unknown>
 export const queryKeys = {
   pages: (slug: string) => ['pages', slug],
   sections: (slug: string) => ['sections', slug],
+  statuses: (slug: string) => ['statuses', slug],
   tasks: (slug: string) => ['tasks', slug],
   settings: (slug: string) => ['settings', slug],
 }
 
-export const listFns = { pages: listPagesFn, sections: listSectionsFn, tasks: listTasksFn, settings: getSettingsFn }
+export const listFns = { pages: listPagesFn, sections: listSectionsFn, statuses: listStatusesFn, tasks: listTasksFn, settings: getSettingsFn }
 
 function serverCollection<T extends { id: string }>(
   qc: QueryClient,
@@ -73,6 +75,7 @@ export function getServerSource(qc: QueryClient, slug: string): Source {
       basePath: `/s/${slug}`,
       pages: serverCollection<Page>(qc, slug, 'pages', { insert: insertPagesFn, update: updatePagesFn, remove: deletePagesFn }),
       sections: serverCollection<Section>(qc, slug, 'sections', { insert: insertSectionsFn, update: updateSectionsFn, remove: deleteSectionsFn }),
+      statuses: serverCollection<Status>(qc, slug, 'statuses', { insert: insertStatusesFn, update: updateStatusesFn, remove: deleteStatusesFn }),
       tasks: serverCollection<Task>(qc, slug, 'tasks', { insert: insertTasksFn, update: updateTasksFn, remove: deleteTasksFn }),
       settings: serverCollection<Settings>(qc, slug, 'settings', {
         update: ({ data }) => updateSettingsFn({ data: { slug, changes: data.items[0].changes } }),
@@ -101,6 +104,7 @@ export function getLocalSource(): Source {
     basePath: '/local',
     pages: localCollection<Page>('pages'),
     sections: localCollection<Section>('sections'),
+    statuses: localCollection<Status>('statuses'),
     tasks: localCollection<Task>('tasks'),
     settings: localCollection<Settings>('settings'),
   }

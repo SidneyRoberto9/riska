@@ -1,6 +1,6 @@
 import { eq, useLiveQuery } from '@tanstack/react-db'
 import { ChevronLeft, Plus } from 'lucide-react'
-import { useState, type FormEvent } from 'react'
+import { useEffect, useState, type FormEvent } from 'react'
 import { useActions } from '#/data/actions'
 import { useSource } from '#/data/source-context'
 import { LIMITS, type Task } from '#/lib/types'
@@ -21,6 +21,11 @@ export function ChecklistView({ pageId }: { pageId: string }) {
     (q) => q.from({ t: source.tasks }).where(({ t }) => eq(t.pageId, pageId)).orderBy(({ t }) => t.position),
     [source, pageId],
   )
+
+  // Local mode only: pages saved before statuses existed get the defaults once
+  useEffect(() => {
+    if (isReady && pages[0]) a.upgradeLocalPage(pageId)
+  }, [isReady, pages[0]?.id])
 
   const page = pages[0]
   if (!page) {

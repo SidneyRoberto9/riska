@@ -1,8 +1,8 @@
 import { createServerFn } from '@tanstack/react-start'
-import type { Page, Section, Task } from '#/lib/types'
+import type { Page, Section, Status, Task } from '#/lib/types'
 import { requireAccess } from './auth.server'
 import { db } from './db.server'
-import { arr, id, pageFields, partial, sectionFields, shape, slug, taskFields } from './validate'
+import { arr, id, pageFields, partial, sectionFields, shape, slug, statusFields, taskFields, taskUpdateFields } from './validate'
 
 const bySlug = shape({ slug })
 const updates = <S extends Record<string, (v: unknown) => unknown>>(fields: S) =>
@@ -37,7 +37,8 @@ export const listTasksFn = createServerFn()
     const s = await requireAccess(data.slug)
     const sql = await db()
     return [...(await sql<Task[]>`
-      select t.id, t.section_id, s.page_id, t.text, t.done, t.badges, t.position
+      select t.id, t.section_id, s.page_id, t.text, t.done, t.status_id, t.note,
+             to_json(t.created_at) #>> '{}' as created_at, t.position, t.board_position
       from tasks t join sections s on s.id = t.section_id join pages p on p.id = s.page_id
       where p.session_slug = ${s}`)]
   })
@@ -109,11 +110,55 @@ export const deleteSectionsFn = createServerFn({ method: 'POST' })
     await sql`delete from sections where id = any(${data.ids}) and page_id in (select id from pages where session_slug = ${s})`
   })
 
-// ---- tasks -------------------------------------------------------------
+// ---- statuses ----------------------------------------------------------
 
-// jsonb column: arrays must be wrapped or postgres.js sends them as a postgres array
-const withJson = (sql: Awaited<ReturnType<typeof db>>, x: Record<string, any>) =>
-  x.badges === undefined ? x : { ...x, badges: sql.json(x.badges) }
+export const listStatusesFn = createServerFn()
+  .validator(bySlug)
+  .handler(async ({ data }) => {
+    const s = await requireAccess(data.slug)
+    const sql = await db()
+    return [...(await sql<Status[]>`
+      select st.id, st.page_id, st.name, st.color, st.done, st.position
+      from statuses st join pages p on p.id = st.page_id
+      where p.session_slug = ${s}`)]
+  })
+
+export const insertStatusesFn = createServerFn({ method: 'POST' })
+  .validator(shape({ slug, items: arr(shape({ id, pageId: id, ...statusFields })) }))
+  .handler(async ({ data }) => {
+    const s = await requireAccess(data.slug)
+    const sql = await db()
+    await sql.begin(async (tx) => {
+      for (const x of data.items) {
+        const [ok] = await tx`select 1 from pages where id = ${x.pageId} and session_slug = ${s}`
+        if (!ok) throw new Error('NOT_FOUND')
+        await tx`insert into statuses ${tx(x)}`
+      }
+    })
+  })
+
+export const updateStatusesFn = createServerFn({ method: 'POST' })
+  .validator(updates(statusFields))
+  .handler(async ({ data }) => {
+    const s = await requireAccess(data.slug)
+    const sql = await db()
+    await sql.begin(async (tx) => {
+      for (const { id, changes } of data.items) {
+        await tx`update statuses set ${tx(changes as Record<string, any>)}
+          where id = ${id} and page_id in (select id from pages where session_slug = ${s})`
+      }
+    })
+  })
+
+export const deleteStatusesFn = createServerFn({ method: 'POST' })
+  .validator(removals)
+  .handler(async ({ data }) => {
+    const s = await requireAccess(data.slug)
+    const sql = await db()
+    await sql`delete from statuses where id = any(${data.ids}) and page_id in (select id from pages where session_slug = ${s})`
+  })
+
+// ---- tasks -------------------------------------------------------------
 
 export const insertTasksFn = createServerFn({ method: 'POST' })
   .validator(shape({ slug, items: arr(shape({ id, sectionId: id, ...taskFields })) }))
@@ -122,24 +167,34 @@ export const insertTasksFn = createServerFn({ method: 'POST' })
     const sql = await db()
     await sql.begin(async (tx) => {
       for (const x of data.items) {
+        // Section in this session; a status, when set, must belong to that section's page
         const [ok] = await tx`
           select 1 from sections sc join pages p on p.id = sc.page_id
-          where sc.id = ${x.sectionId} and p.session_slug = ${s}`
+          where sc.id = ${x.sectionId} and p.session_slug = ${s}
+            and (${x.statusId}::text is null
+                 or exists (select 1 from statuses st where st.id = ${x.statusId} and st.page_id = sc.page_id))`
         if (!ok) throw new Error('NOT_FOUND')
-        await tx`insert into tasks ${tx(withJson(sql, x))}`
+        await tx`insert into tasks ${tx(x)}`
       }
     })
   })
 
 export const updateTasksFn = createServerFn({ method: 'POST' })
-  .validator(updates(taskFields))
+  .validator(updates(taskUpdateFields))
   .handler(async ({ data }) => {
     const s = await requireAccess(data.slug)
     const sql = await db()
     await sql.begin(async (tx) => {
       for (const { id, changes } of data.items) {
-        await tx`update tasks set ${tx(withJson(sql, changes))}
-          where id = ${id} and section_id in (select sc.id from sections sc join pages p on p.id = sc.page_id where p.session_slug = ${s})`
+        const sectionId = changes.sectionId ?? null
+        const statusId = changes.statusId ?? null
+        // The (possibly new) section must be in this session and a new status must be on that section's page;
+        // otherwise nothing is written (same as updating a row another device already deleted)
+        await tx`update tasks t set ${tx(changes as Record<string, any>)}
+          from sections sc join pages p on p.id = sc.page_id
+          where t.id = ${id} and sc.id = coalesce(${sectionId}::text, t.section_id) and p.session_slug = ${s}
+            and (${statusId}::text is null
+                 or exists (select 1 from statuses st where st.id = ${statusId} and st.page_id = sc.page_id))`
       }
     })
   })

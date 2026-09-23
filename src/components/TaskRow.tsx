@@ -1,16 +1,13 @@
-import { ArrowDown, ArrowUp, Plus, Tag, Trash2 } from 'lucide-react'
+import { ArrowDown, ArrowUp, Plus, Trash2 } from 'lucide-react'
 import { useState, type FormEvent } from 'react'
 import { useActions } from '#/data/actions'
-import { LIMITS, type Badge, type Section, type Task } from '#/lib/types'
-import { BadgeChip, BadgeEditor } from './Badge'
+import { LIMITS, type Section, type Task } from '#/lib/types'
 import { InlineEdit } from './InlineEdit'
-import { Menu, MenuItem, Popover } from './Popover'
+import { Menu, MenuItem } from './Popover'
 import { VoiceButton } from './VoiceButton'
 
 export function TaskRow({ task, siblings }: { task: Task; siblings: Task[] }) {
   const a = useActions()
-  const [addingBadge, setAddingBadge] = useState(false)
-  const setBadges = (badges: Badge[]) => a.updateTask(task.id, { badges })
   const i = siblings.findIndex((t) => t.id === task.id)
 
   return (
@@ -20,7 +17,7 @@ export function TaskRow({ task, siblings }: { task: Task; siblings: Task[] }) {
           type="checkbox"
           className="check"
           checked={task.done}
-          onChange={(e) => a.updateTask(task.id, { done: e.target.checked })}
+          onChange={(e) => a.setTaskDone(task, e.target.checked)}
           aria-label={`Concluída: ${task.text}`}
         />
       </label>
@@ -34,53 +31,21 @@ export function TaskRow({ task, siblings }: { task: Task; siblings: Task[] }) {
           onSave={(text) => a.updateTask(task.id, { text })}
           className={task.done ? 'text-ink-soft line-through decoration-ink-soft/40' : ''}
         />
-        {task.badges.map((b, j) => (
-          <Popover key={j} trigger={(p) => <BadgeChip {...p} badge={b} className="ml-1.5" />}>
-            {(close) => (
-              <BadgeEditor
-                initial={b}
-                onSave={(nb) => {
-                  setBadges(task.badges.map((x, k) => (k === j ? nb : x)))
-                  close()
-                }}
-                onRemove={() => {
-                  setBadges(task.badges.filter((_, k) => k !== j))
-                  close()
-                }}
-              />
-            )}
-          </Popover>
-        ))}
       </div>
-      <Menu label="Ações da tarefa" quiet onClose={() => setAddingBadge(false)}>
-        {(close) =>
-          addingBadge ? (
-            <BadgeEditor
-              onSave={(b) => {
-                setBadges([...task.badges, b])
-                setAddingBadge(false)
-                close()
-              }}
-            />
-          ) : (
-            <>
-              <MenuItem icon={ArrowUp} disabled={i <= 0} onClick={() => (a.moveTask(siblings, task.id, -1), close())}>
-                Subir
-              </MenuItem>
-              <MenuItem icon={ArrowDown} disabled={i >= siblings.length - 1} onClick={() => (a.moveTask(siblings, task.id, 1), close())}>
-                Descer
-              </MenuItem>
-              {task.badges.length < LIMITS.badges && (
-                <MenuItem icon={Tag} onClick={() => setAddingBadge(true)}>
-                  Adicionar badge
-                </MenuItem>
-              )}
-              <MenuItem icon={Trash2} danger onClick={() => (a.deleteTask(task.id), close())}>
-                Deletar tarefa
-              </MenuItem>
-            </>
-          )
-        }
+      <Menu label="Ações da tarefa" quiet>
+        {(close) => (
+          <>
+            <MenuItem icon={ArrowUp} disabled={i <= 0} onClick={() => (a.moveTask(siblings, task.id, -1), close())}>
+              Subir
+            </MenuItem>
+            <MenuItem icon={ArrowDown} disabled={i >= siblings.length - 1} onClick={() => (a.moveTask(siblings, task.id, 1), close())}>
+              Descer
+            </MenuItem>
+            <MenuItem icon={Trash2} danger onClick={() => (a.deleteTask(task.id), close())}>
+              Deletar tarefa
+            </MenuItem>
+          </>
+        )}
       </Menu>
     </div>
   )

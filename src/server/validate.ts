@@ -1,5 +1,5 @@
 import { ID_RE, PIN_RE, SLUG_RE } from '#/lib/id'
-import { LIMITS, MODES, THEMES, type Badge } from '#/lib/types'
+import { LIMITS, MODES, THEMES } from '#/lib/types'
 
 type Check<T> = (v: unknown) => T
 type Shape = Record<string, Check<unknown>>
@@ -24,11 +24,11 @@ export const oneOf = <T extends string>(list: readonly T[]): Check<T> => (v) =>
 export const arr = <T>(each: Check<T>, max = 500): Check<T[]> => (v) =>
   Array.isArray(v) && v.length <= max ? v.map(each) : invalid()
 
+export const nullable = <T>(f: Check<T>): Check<T | null> => (v) => (v === null ? null : f(v))
+export const isoDate: Check<string> = (v) =>
+  typeof v === 'string' && v.length <= 40 && !Number.isNaN(Date.parse(v)) ? v : invalid()
+
 const color: Check<string> = (v) => (typeof v === 'string' && /^#[0-9a-f]{6}$/.test(v) ? v : invalid())
-export const badges: Check<Badge[]> = arr((b) => {
-  const o = obj(b)
-  return { text: str(LIMITS.badgeText)(o.text), color: color(o.color) }
-}, LIMITS.badges)
 
 export const theme = oneOf(THEMES.map((t) => t.id))
 export const mode = oneOf(MODES.map((m) => m.id))
@@ -51,4 +51,15 @@ export function partial<S extends Shape>(s: S): Check<Partial<Out<S>>> {
 
 export const pageFields = { title: str(LIMITS.title), subtitle: str(LIMITS.title), position: int }
 export const sectionFields = { title: str(LIMITS.title), note: str(LIMITS.note), highlight: bool, position: int }
-export const taskFields = { text: str(LIMITS.task), done: bool, badges, position: int }
+export const statusFields = { name: str(LIMITS.statusName), color, done: bool, position: int }
+export const taskFields = {
+  text: str(LIMITS.task),
+  done: bool,
+  statusId: nullable(id),
+  note: str(LIMITS.taskNote),
+  createdAt: nullable(isoDate),
+  position: int,
+  boardPosition: int,
+}
+// Moving a task between sections (list drag-and-drop) is update-only
+export const taskUpdateFields = { ...taskFields, sectionId: id }
