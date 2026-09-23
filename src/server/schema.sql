@@ -28,7 +28,6 @@ CREATE TABLE IF NOT EXISTS tasks (
   section_id text NOT NULL REFERENCES sections ON DELETE CASCADE,
   text       text NOT NULL,
   done       boolean NOT NULL DEFAULT false,
-  badges     jsonb NOT NULL DEFAULT '[]',
   position   int NOT NULL
 );
 CREATE INDEX IF NOT EXISTS pages_session_idx ON pages (session_slug);
