@@ -9,6 +9,19 @@ const MAX_FAILS = 5
 
 export type LoginResult = { ok: true } | { ok: false; reason: 'invalid' } | { ok: false; reason: 'locked'; until: string }
 
+// Applies the same lock the 5th failure applies. Shared so a stuck counter (a request that
+// claimed an attempt but crashed before locking - DB error, restart, deploy) gets locked on
+// the next login instead of returning invalid forever with no lock to check against.
+async function applyLock(sql: Awaited<ReturnType<typeof db>>, slug: string, lockLevel: number): Promise<LoginResult> {
+  const minutes = Math.min(15 * 2 ** lockLevel, 24 * 60)
+  const [l] = await sql<{ lockedUntil: Date }[]>`
+    update sessions set failed_attempts = 0, lock_level = lock_level + 1,
+      locked_until = now() + make_interval(mins => ${minutes})
+    where slug = ${slug} returning locked_until`
+  if (!l) return { ok: false, reason: 'invalid' } // session deleted mid-request
+  return { ok: false, reason: 'locked', until: l.lockedUntil.toISOString() }
+}
+
 export const checkSlugFn = createServerFn()
   .validator(shape({ slug: str(100) }))
   .handler(async ({ data }) => {
@@ -63,7 +76,9 @@ export const loginFn = createServerFn({ method: 'POST' })
       if (row?.lockedUntil && row.lockedUntil > new Date()) {
         return { ok: false, reason: 'locked', until: row.lockedUntil.toISOString() }
       }
-      return { ok: false, reason: 'invalid' }
+      // No active lock despite a claimed count past MAX_FAILS: the request holding an
+      // earlier attempt died before it could lock (see applyLock above). Lock it now.
+      return applyLock(sql, data.slug, claim.lockLevel)
     }
     if (await verifyPin(data.pin, claim.pinHash)) {
       await sql`update sessions set failed_attempts = 0, lock_level = 0, locked_until = null where slug = ${data.slug}`
@@ -71,13 +86,7 @@ export const loginFn = createServerFn({ method: 'POST' })
       return { ok: true }
     }
     if (claim.failedAttempts < MAX_FAILS) return { ok: false, reason: 'invalid' }
-    const minutes = Math.min(15 * 2 ** claim.lockLevel, 24 * 60)
-    const [l] = await sql<{ lockedUntil: Date }[]>`
-      update sessions set failed_attempts = 0, lock_level = lock_level + 1,
-        locked_until = now() + make_interval(mins => ${minutes})
-      where slug = ${data.slug} returning locked_until`
-    if (!l) return { ok: false, reason: 'invalid' } // session deleted mid-request
-    return { ok: false, reason: 'locked', until: l.lockedUntil.toISOString() }
+    return applyLock(sql, data.slug, claim.lockLevel)
   })
 
 export const accessFn = createServerFn()
