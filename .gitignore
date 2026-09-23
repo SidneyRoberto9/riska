@@ -1,8 +1,13 @@
 node_modules
-.output
-.vinxi
-.tanstack
+.DS_Store
 dist
+dist-ssr
+*.local
 .env
 .env.*
 !.env.example
+.nitro
+.tanstack
+.output
+.vinxi
+.playwright-mcp
