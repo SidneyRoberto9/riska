@@ -57,7 +57,9 @@ export function useActions() {
     nextPosition(all(tasks).filter((t) => t.pageId === pageId).map((t) => ({ position: t.boardPosition ?? 0 })))
   const setTaskState = (task: Task, changes: Partial<Task>) => {
     if (!tasks.has(task.id)) return
-    const moved = changes.statusId !== undefined && changes.statusId !== task.statusId
+    // Compare against the resolved column, not the raw field: a null statusId that already resolves
+    // to the first column (e.g. re-checking a task already in it) is not a move
+    const moved = changes.statusId !== undefined && changes.statusId !== statusOf(task, pageStatuses(task.pageId))?.id
     const extra = moved ? { boardPosition: boardEnd(task.pageId) } : {}
     run(() => tasks.update(task.id, (d) => void Object.assign(d, changes, extra)))
   }
