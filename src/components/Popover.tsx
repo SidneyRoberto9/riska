@@ -1,11 +1,11 @@
-import { Ellipsis, type LucideIcon } from 'lucide-react'
-import { useId, useLayoutEffect, useRef, useState, type ReactNode, type RefObject } from 'react'
+import { Ellipsis, type LucideIcon } from "lucide-react"
+import { type ReactNode, type RefObject, useId, useLayoutEffect, useRef, useState } from "react"
 
 export type TriggerProps = {
   ref: RefObject<HTMLButtonElement | null>
   popoverTarget: string
-  type: 'button'
-  'aria-expanded': boolean
+  type: "button"
+  "aria-expanded": boolean
 }
 
 // Native popover API (top layer + light dismiss); positioned next to the trigger by hand
@@ -13,7 +13,7 @@ export type TriggerProps = {
 export function Popover({
   trigger,
   children,
-  className = '',
+  className = "",
   onClose,
 }: {
   trigger: (props: TriggerProps) => ReactNode
@@ -29,7 +29,9 @@ export function Popover({
   useLayoutEffect(() => {
     const b = btn.current
     const p = pop.current
-    if (!open || !b || !p) return
+    if (!open || !b || !p) {
+      return
+    }
     const place = () => {
       const r = b.getBoundingClientRect()
       const left = Math.max(8, Math.min(r.right - p.offsetWidth, innerWidth - p.offsetWidth - 8))
@@ -47,16 +49,18 @@ export function Popover({
 
   return (
     <>
-      {trigger({ ref: btn, popoverTarget: id, type: 'button', 'aria-expanded': open })}
+      {trigger({ ref: btn, popoverTarget: id, type: "button", "aria-expanded": open })}
       <div
         ref={pop}
         id={id}
         popover="auto"
         className={`fixed max-w-[calc(100vw-16px)] text-sm ${className}`}
         onToggle={(e) => {
-          const isOpen = e.newState === 'open'
+          const isOpen = e.newState === "open"
           setOpen(isOpen)
-          if (!isOpen) onClose?.()
+          if (!isOpen) {
+            onClose?.()
+          }
         }}
       >
         {open && children(() => pop.current?.hidePopover())}
@@ -85,7 +89,7 @@ export function Menu({
         <button
           {...p}
           aria-label={label}
-          className={`-my-1.5 grid size-10 shrink-0 place-items-center rounded-lg text-ink-soft hover:bg-accent-soft hover:text-accent ${quiet ? 'row-action' : ''}`}
+          className={`-my-1.5 grid size-10 shrink-0 place-items-center rounded-lg text-ink-soft hover:bg-accent-soft hover:text-accent ${quiet ? "row-action" : ""}`}
         >
           <Ellipsis size={18} aria-hidden />
         </button>
@@ -114,9 +118,9 @@ export function MenuItem({
       type="button"
       onClick={onClick}
       disabled={disabled}
-      className={`flex min-h-10 w-full items-center gap-2.5 rounded-lg px-3 text-left hover:bg-accent-soft disabled:pointer-events-none disabled:opacity-40 ${danger ? 'text-warn hover:bg-warn-soft' : ''}`}
+      className={`flex min-h-10 w-full items-center gap-2.5 rounded-lg px-3 text-left hover:bg-accent-soft disabled:pointer-events-none disabled:opacity-40 ${danger ? "text-warn hover:bg-warn-soft" : ""}`}
     >
-      <Icon size={16} aria-hidden className={danger ? '' : 'text-ink-soft'} />
+      <Icon size={16} aria-hidden className={danger ? "" : "text-ink-soft"} />
       {children}
     </button>
   )

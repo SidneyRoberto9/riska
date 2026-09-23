@@ -1,11 +1,11 @@
-import { Check, Plus } from 'lucide-react'
-import { useState, type ComponentProps, type FormEvent, type ReactNode } from 'react'
-import { useActions } from '#/data/actions'
-import { statusOf } from '#/lib/status'
-import { LIMITS, STATUS_COLORS, type Status, type Task } from '#/lib/types'
-import { Popover, type TriggerProps } from './Popover'
+import { Check, Plus } from "lucide-react"
+import { type ComponentProps, type FormEvent, type ReactNode, useState } from "react"
+import { useActions } from "#/data/actions"
+import { statusOf } from "#/lib/status"
+import { LIMITS, STATUS_COLORS, type Status, type Task } from "#/lib/types"
+import { Popover, type TriggerProps } from "./Popover"
 
-const COLOR_NAMES = ['Vermelho', 'Laranja', 'Âmbar', 'Verde', 'Azul', 'Roxo', 'Rosa', 'Cinza']
+const COLOR_NAMES = ["Vermelho", "Laranja", "Âmbar", "Verde", "Azul", "Roxo", "Rosa", "Cinza"]
 
 // Tinted from the status colour against the current surface/ink, so it works in light and dark
 export const tint = (color: string) => ({
@@ -13,9 +13,9 @@ export const tint = (color: string) => ({
   color: `color-mix(in oklab, ${color} 80%, var(--ink))`,
 })
 
-export type StatusDraft = Pick<Status, 'name' | 'color' | 'done'>
+export type StatusDraft = Pick<Status, "name" | "color" | "done">
 
-export function StatusChip({ status, className = '', ...props }: { status: Status } & ComponentProps<'button'>) {
+export function StatusChip({ status, className = "", ...props }: { status: Status } & ComponentProps<"button">) {
   return (
     <button
       type="button"
@@ -28,14 +28,24 @@ export function StatusChip({ status, className = '', ...props }: { status: Statu
   )
 }
 
-export function StatusEditor({ initial, onSave, onRemove }: { initial?: StatusDraft; onSave: (v: StatusDraft) => void; onRemove?: () => void }) {
-  const [name, setName] = useState(initial?.name ?? '')
+export function StatusEditor({
+  initial,
+  onSave,
+  onRemove,
+}: {
+  initial?: StatusDraft
+  onSave: (v: StatusDraft) => void
+  onRemove?: () => void
+}) {
+  const [name, setName] = useState(initial?.name ?? "")
   const [color, setColor] = useState(initial?.color ?? STATUS_COLORS[0])
   const [done, setDone] = useState(initial?.done ?? false)
   const submit = (e: FormEvent) => {
     e.preventDefault()
     const n = name.trim()
-    if (n) onSave({ name: n, color, done })
+    if (n) {
+      onSave({ name: n, color, done })
+    }
   }
   const custom = !STATUS_COLORS.includes(color)
 
@@ -68,10 +78,16 @@ export function StatusEditor({ initial, onSave, onRemove }: { initial?: StatusDr
         ))}
         <label
           title="Cor personalizada"
-          className={`relative size-8 cursor-pointer overflow-hidden rounded-full ring-offset-2 ring-offset-surface has-focus-visible:outline-2 has-focus-visible:outline-accent ${custom ? 'ring-2 ring-ink' : ''}`}
-          style={{ background: custom ? color : 'conic-gradient(red, yellow, lime, cyan, blue, magenta, red)' }}
+          className={`relative size-8 cursor-pointer overflow-hidden rounded-full ring-offset-2 ring-offset-surface has-focus-visible:outline-2 has-focus-visible:outline-accent ${custom ? "ring-2 ring-ink" : ""}`}
+          style={{ background: custom ? color : "conic-gradient(red, yellow, lime, cyan, blue, magenta, red)" }}
         >
-          <input type="color" value={color} onChange={(e) => setColor(e.target.value)} aria-label="Cor personalizada" className="absolute inset-0 cursor-pointer opacity-0" />
+          <input
+            type="color"
+            value={color}
+            onChange={(e) => setColor(e.target.value)}
+            aria-label="Cor personalizada"
+            className="absolute inset-0 cursor-pointer opacity-0"
+          />
         </label>
       </div>
       <label className="flex min-h-10 cursor-pointer items-center gap-2.5 text-sm">
@@ -80,7 +96,7 @@ export function StatusEditor({ initial, onSave, onRemove }: { initial?: StatusDr
       </label>
       <div className="flex items-center justify-between gap-2">
         <span style={tint(color)} className="rounded-md px-1.5 py-px text-[0.68rem] font-bold tracking-[.03em]">
-          {name.trim() || 'prévia'}
+          {name.trim() || "prévia"}
         </span>
         <div className="flex gap-2">
           {onRemove && (
@@ -88,7 +104,11 @@ export function StatusEditor({ initial, onSave, onRemove }: { initial?: StatusDr
               Remover
             </button>
           )}
-          <button type="submit" disabled={!name.trim()} className="min-h-10 rounded-lg bg-accent px-3.5 font-semibold text-surface disabled:opacity-40">
+          <button
+            type="submit"
+            disabled={!name.trim()}
+            className="min-h-10 rounded-lg bg-accent px-3.5 font-semibold text-surface disabled:opacity-40"
+          >
             Salvar
           </button>
         </div>
@@ -122,7 +142,9 @@ export function StatusOptions({ task, statuses, onDone }: { task: Task; statuses
           type="button"
           aria-pressed={s.id === current?.id}
           onClick={() => {
-            if (s.id !== current?.id) a.setTaskStatus(task, s)
+            if (s.id !== current?.id) {
+              a.setTaskStatus(task, s)
+            }
             onDone()
           }}
           className="flex min-h-10 w-full items-center gap-2.5 rounded-lg px-3 text-left hover:bg-accent-soft"
@@ -144,7 +166,15 @@ export function StatusOptions({ task, statuses, onDone }: { task: Task; statuses
   )
 }
 
-export function StatusPicker({ task, statuses, trigger }: { task: Task; statuses: Status[]; trigger: (p: TriggerProps) => ReactNode }) {
+export function StatusPicker({
+  task,
+  statuses,
+  trigger,
+}: {
+  task: Task
+  statuses: Status[]
+  trigger: (p: TriggerProps) => ReactNode
+}) {
   return (
     <Popover className="min-w-52 p-1" trigger={trigger}>
       {(close) => <StatusOptions task={task} statuses={statuses} onDone={close} />}

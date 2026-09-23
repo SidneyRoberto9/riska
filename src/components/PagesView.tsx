@@ -1,21 +1,21 @@
-import { useLiveQuery } from '@tanstack/react-db'
-import { ArrowDown, ArrowUp, GripVertical, Trash2 } from 'lucide-react'
-import { useNavigate } from '@tanstack/react-router'
-import { useState, type FormEvent } from 'react'
-import { useActions } from '#/data/actions'
-import { useSource } from '#/data/source-context'
-import { LIMITS, type Page } from '#/lib/types'
-import { ColumnItems, DragPreview, SortableBoard, useSortableItem } from './dnd'
-import { PageLink } from './links'
-import { Menu, MenuItem } from './Popover'
-import { ProgressBar } from './ProgressBar'
-import { SettingsButton } from './Settings'
+import { useLiveQuery } from "@tanstack/react-db"
+import { useNavigate } from "@tanstack/react-router"
+import { ArrowDown, ArrowUp, GripVertical, Trash2 } from "lucide-react"
+import { type FormEvent, useState } from "react"
+import { useActions } from "#/data/actions"
+import { useSource } from "#/data/source-context"
+import { LIMITS, type Page } from "#/lib/types"
+import { ColumnItems, DragPreview, SortableBoard, useSortableItem } from "./dnd"
+import { PageLink } from "./links"
+import { Menu, MenuItem } from "./Popover"
+import { ProgressBar } from "./ProgressBar"
+import { SettingsButton } from "./Settings"
 
 export function PagesView() {
   const source = useSource()
   const a = useActions()
   const navigate = useNavigate()
-  const [title, setTitle] = useState('')
+  const [title, setTitle] = useState("")
   const { data: pages } = useLiveQuery((q) => q.from({ p: source.pages }).orderBy(({ p }) => p.position), [source])
   const { data: tasks } = useLiveQuery((q) => q.from({ t: source.tasks }), [source])
 
@@ -23,18 +23,25 @@ export function PagesView() {
   for (const t of tasks) {
     const s = stats.get(t.pageId) ?? { done: 0, total: 0 }
     s.total++
-    if (t.done) s.done++
+    if (t.done) {
+      s.done++
+    }
     stats.set(t.pageId, s)
   }
 
   const create = (e: FormEvent) => {
     e.preventDefault()
     const v = title.trim()
-    if (!v) return
+    if (!v) {
+      return
+    }
     const pageId = a.addPage(v)
-    setTitle('')
-    if (source.slug) navigate({ to: '/s/$slug/p/$pageId', params: { slug: source.slug, pageId } })
-    else navigate({ to: '/local/p/$pageId', params: { pageId } })
+    setTitle("")
+    if (source.slug) {
+      navigate({ to: "/s/$slug/p/$pageId", params: { slug: source.slug, pageId } })
+    } else {
+      navigate({ to: "/local/p/$pageId", params: { pageId } })
+    }
   }
 
   return (
@@ -44,18 +51,18 @@ export function PagesView() {
           <a href="/" className="mb-2 inline-block text-sm text-ink-soft hover:text-accent">
             ← Início
           </a>
-          <h1 className="m-0 text-2xl font-extrabold tracking-[-0.01em]">{source.slug ?? 'Sem salvar'}</h1>
+          <h1 className="m-0 text-2xl font-extrabold tracking-[-0.01em]">{source.slug ?? "Sem salvar"}</h1>
           <p className="m-0 mt-1 text-[0.9rem] text-ink-soft">
-            {source.slug ? 'Sessão sincronizada' : 'Dados só neste navegador'}
+            {source.slug ? "Sessão sincronizada" : "Dados só neste navegador"}
           </p>
         </div>
         <SettingsButton />
       </header>
       <main>
         <SortableBoard
-          columns={[{ id: 'pages', items: pages.map((p) => p.id) }]}
+          columns={[{ id: "pages", items: pages.map((p) => p.id) }]}
           onItemsCommit={({ order }) => a.reorderPages(order)}
-          label={(_, id) => `página “${pages.find((p) => p.id === id)?.title ?? ''}”`}
+          label={(_, id) => `página “${pages.find((p) => p.id === id)?.title ?? ""}”`}
           renderOverlay={(_, id) => <DragPreview strong>{pages.find((p) => p.id === id)?.title}</DragPreview>}
         >
           <ColumnItems id="pages" className="space-y-2.5">
@@ -67,7 +74,10 @@ export function PagesView() {
             }
           </ColumnItems>
         </SortableBoard>
-        <form onSubmit={create} className="mt-2.5 flex gap-2 rounded-2xl border border-dashed border-line p-2 focus-within:border-accent">
+        <form
+          onSubmit={create}
+          className="mt-2.5 flex gap-2 rounded-2xl border border-dashed border-line p-2 focus-within:border-accent"
+        >
           <input
             value={title}
             onChange={(e) => setTitle(e.target.value)}
@@ -87,12 +97,15 @@ export function PagesView() {
 function PageCard({ page: p, stats: s, pages }: { page: Page; stats: { done: number; total: number }; pages: Page[] }) {
   const source = useSource()
   const a = useActions()
-  const { setNodeRef, setActivatorNodeRef, attributes, listeners, style, isDragging } = useSortableItem(p.id, 'página arrastável')
+  const { setNodeRef, setActivatorNodeRef, attributes, listeners, style, isDragging } = useSortableItem(
+    p.id,
+    "página arrastável"
+  )
   return (
     <div
       ref={setNodeRef}
       style={style}
-      className={`group flex items-start gap-2 rounded-2xl border border-line bg-surface p-4 pl-2 ${isDragging ? 'drag-ghost' : ''}`}
+      className={`group flex items-start gap-2 rounded-2xl border border-line bg-surface p-4 pl-2 ${isDragging ? "drag-ghost" : ""}`}
     >
       <button
         type="button"
@@ -114,14 +127,20 @@ function PageCard({ page: p, stats: s, pages }: { page: Page; stats: { done: num
       <Menu label="Ações da página">
         {(close) => (
           <>
-            <MenuItem icon={ArrowUp} onClick={() => (a.movePage(pages, p.id, -1), close())}>Subir</MenuItem>
-            <MenuItem icon={ArrowDown} onClick={() => (a.movePage(pages, p.id, 1), close())}>Descer</MenuItem>
+            <MenuItem icon={ArrowUp} onClick={() => (a.movePage(pages, p.id, -1), close())}>
+              Subir
+            </MenuItem>
+            <MenuItem icon={ArrowDown} onClick={() => (a.movePage(pages, p.id, 1), close())}>
+              Descer
+            </MenuItem>
             <MenuItem
               icon={Trash2}
               danger
               onClick={() => {
                 close()
-                if (confirm(`Deletar a página “${p.title}”?`)) a.deletePage(p.id)
+                if (confirm(`Deletar a página “${p.title}”?`)) {
+                  a.deletePage(p.id)
+                }
               }}
             >
               Deletar

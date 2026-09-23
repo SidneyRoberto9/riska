@@ -1,7 +1,7 @@
-import postgres from 'postgres'
-import schema from './schema.sql?raw'
+import postgres from "postgres"
+import schema from "./schema.sql?raw"
 
-const client = postgres(process.env.DATABASE_URL ?? '', {
+const client = postgres(process.env.DATABASE_URL ?? "", {
   max: 5,
   transform: postgres.camel,
   onnotice: () => {},

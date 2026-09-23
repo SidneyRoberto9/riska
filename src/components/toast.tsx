@@ -1,4 +1,4 @@
-import { createContext, useCallback, useContext, useState, type ReactNode } from 'react'
+import { createContext, type ReactNode, useCallback, useContext, useState } from "react"
 
 type ToastAction = { label: string; onClick: () => void }
 type ToastItem = { id: number; text: string; action?: ToastAction }
@@ -18,7 +18,7 @@ export function ToastProvider({ children }: { children: ReactNode }) {
       setToasts((t) => [...t.slice(-2), { id, text, action }])
       setTimeout(() => dismiss(id), 6000)
     },
-    [dismiss],
+    [dismiss]
   )
 
   return (
@@ -29,7 +29,10 @@ export function ToastProvider({ children }: { children: ReactNode }) {
         className="pointer-events-none fixed inset-x-0 bottom-[max(16px,env(safe-area-inset-bottom))] z-50 flex flex-col items-center gap-2 px-4"
       >
         {toasts.map((t) => (
-          <div key={t.id} className="pointer-events-auto flex items-center gap-3 rounded-xl bg-ink px-4 py-2.5 text-sm text-ground shadow-lg">
+          <div
+            key={t.id}
+            className="pointer-events-auto flex items-center gap-3 rounded-xl bg-ink px-4 py-2.5 text-sm text-ground shadow-lg"
+          >
             <span>{t.text}</span>
             {t.action && (
               <button

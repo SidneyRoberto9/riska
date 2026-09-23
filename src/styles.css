@@ -24,10 +24,15 @@
   --warn: light-dark(#b45309, #fbbf24);
   --warn-soft: light-dark(#fdf1de, #3a2c11);
 }
-:root[data-mode="light"] { color-scheme: light; }
-:root[data-mode="dark"] { color-scheme: dark; }
+:root[data-mode="light"] {
+  color-scheme: light;
+}
+:root[data-mode="dark"] {
+  color-scheme: dark;
+}
 
-:root, :root[data-theme="roxo"] {
+:root,
+:root[data-theme="roxo"] {
   --ink: light-dark(#1c1a22, #f1eef7);
   --ink-soft: light-dark(#5b5766, #b8b2c8);
   --line: light-dark(#e4e0ec, #332f40);
@@ -95,7 +100,9 @@
     font-family: var(--font-sans);
     -webkit-tap-highlight-color: transparent;
   }
-  h1, h2, h3 {
+  h1,
+  h2,
+  h3 {
     font-family: var(--font-display);
     text-wrap: balance;
   }
@@ -158,7 +165,9 @@
 }
 
 @media (prefers-reduced-motion: reduce) {
-  *, *::before, *::after {
+  *,
+  *::before,
+  *::after {
     animation-duration: 0.01ms !important;
     animation-iteration-count: 1 !important;
     transition-duration: 0.01ms !important;

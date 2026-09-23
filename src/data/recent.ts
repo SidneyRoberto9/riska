@@ -1,9 +1,9 @@
-const KEY = 'checklist-recent'
+const KEY = "checklist-recent"
 
 export function readRecent(): string[] {
   try {
-    const v = JSON.parse(localStorage.getItem(KEY) ?? '[]')
-    return Array.isArray(v) ? v.filter((x) => typeof x === 'string') : []
+    const v = JSON.parse(localStorage.getItem(KEY) ?? "[]")
+    return Array.isArray(v) ? v.filter((x) => typeof x === "string") : []
   } catch {
     return []
   }

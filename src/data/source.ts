@@ -1,12 +1,26 @@
-import { createCollection, localStorageCollectionOptions, type Collection } from '@tanstack/react-db'
-import { queryCollectionOptions } from '@tanstack/query-db-collection'
-import type { QueryClient } from '@tanstack/react-query'
-import type { Page, Section, Settings, Status, Task } from '#/lib/types'
+import { queryCollectionOptions } from "@tanstack/query-db-collection"
+import { type Collection, createCollection, localStorageCollectionOptions } from "@tanstack/react-db"
+import type { QueryClient } from "@tanstack/react-query"
+import type { Page, Section, Settings, Status, Task } from "#/lib/types"
 import {
-  deletePagesFn, deleteSectionsFn, deleteStatusesFn, deleteTasksFn, insertPagesFn, insertSectionsFn, insertStatusesFn, insertTasksFn,
-  listPagesFn, listSectionsFn, listStatusesFn, listTasksFn, updatePagesFn, updateSectionsFn, updateStatusesFn, updateTasksFn,
-} from '#/server/data'
-import { getSettingsFn, updateSettingsFn } from '#/server/session'
+  deletePagesFn,
+  deleteSectionsFn,
+  deleteStatusesFn,
+  deleteTasksFn,
+  insertPagesFn,
+  insertSectionsFn,
+  insertStatusesFn,
+  insertTasksFn,
+  listPagesFn,
+  listSectionsFn,
+  listStatusesFn,
+  listTasksFn,
+  updatePagesFn,
+  updateSectionsFn,
+  updateStatusesFn,
+  updateTasksFn,
+} from "#/server/data"
+import { getSettingsFn, updateSettingsFn } from "#/server/session"
 
 export type Source = {
   slug: string | null
@@ -23,14 +37,20 @@ type Serial = <R>(f: () => Promise<R>) => Promise<R>
 
 // Query keys are shared with route loaders so SSR-prefetched data seeds the collections
 export const queryKeys = {
-  pages: (slug: string) => ['pages', slug],
-  sections: (slug: string) => ['sections', slug],
-  statuses: (slug: string) => ['statuses', slug],
-  tasks: (slug: string) => ['tasks', slug],
-  settings: (slug: string) => ['settings', slug],
+  pages: (slug: string) => ["pages", slug],
+  sections: (slug: string) => ["sections", slug],
+  statuses: (slug: string) => ["statuses", slug],
+  tasks: (slug: string) => ["tasks", slug],
+  settings: (slug: string) => ["settings", slug],
 }
 
-export const listFns = { pages: listPagesFn, sections: listSectionsFn, statuses: listStatusesFn, tasks: listTasksFn, settings: getSettingsFn }
+export const listFns = {
+  pages: listPagesFn,
+  sections: listSectionsFn,
+  statuses: listStatusesFn,
+  tasks: listTasksFn,
+  settings: getSettingsFn,
+}
 
 function serverCollection<T extends { id: string }>(
   qc: QueryClient,
@@ -41,7 +61,7 @@ function serverCollection<T extends { id: string }>(
     update: Fn<{ slug: string; items: { id: string; changes: Partial<T> }[] }>
     remove?: Fn<{ slug: string; ids: string[] }>
   },
-  serial: Serial,
+  serial: Serial
 ) {
   const list = listFns[name] as unknown as Fn<{ slug: string }>
   return createCollection(
@@ -60,13 +80,15 @@ function serverCollection<T extends { id: string }>(
         await serial(() =>
           fns.update({
             data: { slug, items: transaction.mutations.map((m) => ({ id: m.key as string, changes: m.changes })) },
-          }),
+          })
         )
       },
       onDelete: async ({ transaction }) => {
-        await serial(async () => fns.remove?.({ data: { slug, ids: transaction.mutations.map((m) => m.key as string) } }))
+        await serial(async () =>
+          fns.remove?.({ data: { slug, ids: transaction.mutations.map((m) => m.key as string) } })
+        )
       },
-    }),
+    })
   ) as unknown as Collection<T, string>
 }
 
@@ -85,13 +107,43 @@ export function getServerSource(qc: QueryClient, slug: string): Source {
     source = {
       slug,
       basePath: `/s/${slug}`,
-      pages: serverCollection<Page>(qc, slug, 'pages', { insert: insertPagesFn, update: updatePagesFn, remove: deletePagesFn }, serial),
-      sections: serverCollection<Section>(qc, slug, 'sections', { insert: insertSectionsFn, update: updateSectionsFn, remove: deleteSectionsFn }, serial),
-      statuses: serverCollection<Status>(qc, slug, 'statuses', { insert: insertStatusesFn, update: updateStatusesFn, remove: deleteStatusesFn }, serial),
-      tasks: serverCollection<Task>(qc, slug, 'tasks', { insert: insertTasksFn, update: updateTasksFn, remove: deleteTasksFn }, serial),
-      settings: serverCollection<Settings>(qc, slug, 'settings', {
-        update: ({ data }) => updateSettingsFn({ data: { slug, changes: data.items[0].changes } }),
-      }, serial),
+      pages: serverCollection<Page>(
+        qc,
+        slug,
+        "pages",
+        { insert: insertPagesFn, update: updatePagesFn, remove: deletePagesFn },
+        serial
+      ),
+      sections: serverCollection<Section>(
+        qc,
+        slug,
+        "sections",
+        { insert: insertSectionsFn, update: updateSectionsFn, remove: deleteSectionsFn },
+        serial
+      ),
+      statuses: serverCollection<Status>(
+        qc,
+        slug,
+        "statuses",
+        { insert: insertStatusesFn, update: updateStatusesFn, remove: deleteStatusesFn },
+        serial
+      ),
+      tasks: serverCollection<Task>(
+        qc,
+        slug,
+        "tasks",
+        { insert: insertTasksFn, update: updateTasksFn, remove: deleteTasksFn },
+        serial
+      ),
+      settings: serverCollection<Settings>(
+        qc,
+        slug,
+        "settings",
+        {
+          update: ({ data }) => updateSettingsFn({ data: { slug, changes: data.items[0].changes } }),
+        },
+        serial
+      ),
     }
     serverSources.set(slug, source)
   }
@@ -104,7 +156,11 @@ export function forgetServerSource(slug: string) {
 
 function localCollection<T extends { id: string }>(name: string) {
   return createCollection(
-    localStorageCollectionOptions({ id: `local-${name}`, storageKey: `checklist-local-${name}`, getKey: (x: T) => x.id }),
+    localStorageCollectionOptions({
+      id: `local-${name}`,
+      storageKey: `checklist-local-${name}`,
+      getKey: (x: T) => x.id,
+    })
   ) as unknown as Collection<T, string>
 }
 
@@ -113,12 +169,12 @@ let localSource: Source | undefined
 export function getLocalSource(): Source {
   localSource ??= {
     slug: null,
-    basePath: '/local',
-    pages: localCollection<Page>('pages'),
-    sections: localCollection<Section>('sections'),
-    statuses: localCollection<Status>('statuses'),
-    tasks: localCollection<Task>('tasks'),
-    settings: localCollection<Settings>('settings'),
+    basePath: "/local",
+    pages: localCollection<Page>("pages"),
+    sections: localCollection<Section>("sections"),
+    statuses: localCollection<Status>("statuses"),
+    tasks: localCollection<Task>("tasks"),
+    settings: localCollection<Settings>("settings"),
   }
   return localSource
 }

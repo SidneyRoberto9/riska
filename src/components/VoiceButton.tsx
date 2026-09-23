@@ -1,5 +1,5 @@
-import { Mic, Square } from 'lucide-react'
-import { useEffect, useRef, useState } from 'react'
+import { Mic, Square } from "lucide-react"
+import { useEffect, useRef, useState } from "react"
 
 type Recognition = {
   lang: string
@@ -13,13 +13,23 @@ type Recognition = {
 }
 
 const getRecognition = () => {
-  if (typeof window === 'undefined') return undefined
+  if (typeof window === "undefined") {
+    return undefined
+  }
   const w = window as unknown as Record<string, (new () => Recognition) | undefined>
   return w.SpeechRecognition ?? w.webkitSpeechRecognition
 }
 
 // Web Speech API dictation; renders nothing where unsupported (e.g. Firefox)
-export function VoiceButton({ value, onChange, label = 'Ditar tarefa' }: { value: string; onChange: (text: string) => void; label?: string }) {
+export function VoiceButton({
+  value,
+  onChange,
+  label = "Ditar tarefa",
+}: {
+  value: string
+  onChange: (text: string) => void
+  label?: string
+}) {
   const [supported, setSupported] = useState(false)
   const [listening, setListening] = useState(false)
   const rec = useRef<Recognition | null>(null)
@@ -29,7 +39,9 @@ export function VoiceButton({ value, onChange, label = 'Ditar tarefa' }: { value
     return () => rec.current?.stop()
   }, [])
 
-  if (!supported) return null
+  if (!supported) {
+    return null
+  }
 
   const toggle = () => {
     if (listening) {
@@ -39,11 +51,11 @@ export function VoiceButton({ value, onChange, label = 'Ditar tarefa' }: { value
     const R = getRecognition()!
     const r = new R()
     const base = value.trim()
-    r.lang = 'pt-BR'
+    r.lang = "pt-BR"
     r.interimResults = true
     r.continuous = false
     r.onresult = (e) => {
-      const said = Array.from(e.results, (res) => res[0].transcript).join('')
+      const said = Array.from(e.results, (res) => res[0].transcript).join("")
       onChange(base ? `${base} ${said}` : said)
     }
     r.onend = () => setListening(false)
@@ -62,13 +74,17 @@ export function VoiceButton({ value, onChange, label = 'Ditar tarefa' }: { value
       onMouseDown={(e) => e.preventDefault()}
       aria-pressed={listening}
       aria-label={label}
-      title={listening ? 'Parar ditado' : label}
+      title={listening ? "Parar ditado" : label}
       className={`relative grid size-10 shrink-0 place-items-center rounded-full ${
-        listening ? 'bg-accent text-surface' : 'text-ink-soft hover:bg-accent-soft hover:text-accent'
+        listening ? "bg-accent text-surface" : "text-ink-soft hover:bg-accent-soft hover:text-accent"
       }`}
     >
       {listening && <span aria-hidden className="absolute inset-0 animate-ping rounded-full bg-accent/40" />}
-      {listening ? <Square size={14} fill="currentColor" aria-hidden className="relative" /> : <Mic size={18} aria-hidden />}
+      {listening ? (
+        <Square size={14} fill="currentColor" aria-hidden className="relative" />
+      ) : (
+        <Mic size={18} aria-hidden />
+      )}
     </button>
   )
 }

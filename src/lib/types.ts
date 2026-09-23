@@ -1,21 +1,21 @@
 export const THEMES = [
-  { id: 'roxo', label: 'Roxo', swatch: '#6d28d9' },
-  { id: 'rosa', label: 'Rosa', swatch: '#be185d' },
-  { id: 'verde', label: 'Verde', swatch: '#047857' },
-  { id: 'azul', label: 'Azul', swatch: '#1d4ed8' },
-  { id: 'ambar', label: 'Âmbar', swatch: '#c2410c' },
-  { id: 'grafite', label: 'Grafite', swatch: '#3f3f46' },
+  { id: "roxo", label: "Roxo", swatch: "#6d28d9" },
+  { id: "rosa", label: "Rosa", swatch: "#be185d" },
+  { id: "verde", label: "Verde", swatch: "#047857" },
+  { id: "azul", label: "Azul", swatch: "#1d4ed8" },
+  { id: "ambar", label: "Âmbar", swatch: "#c2410c" },
+  { id: "grafite", label: "Grafite", swatch: "#3f3f46" },
 ] as const
-export type ThemeId = (typeof THEMES)[number]['id']
+export type ThemeId = (typeof THEMES)[number]["id"]
 
 export const MODES = [
-  { id: 'light', label: 'Claro' },
-  { id: 'dark', label: 'Escuro' },
-  { id: 'system', label: 'Sistema' },
+  { id: "light", label: "Claro" },
+  { id: "dark", label: "Escuro" },
+  { id: "system", label: "Sistema" },
 ] as const
-export type Mode = (typeof MODES)[number]['id']
+export type Mode = (typeof MODES)[number]["id"]
 
-export const STATUS_COLORS = ['#dc2626', '#ea580c', '#d97706', '#16a34a', '#2563eb', '#7c3aed', '#db2777', '#6b7280']
+export const STATUS_COLORS = ["#dc2626", "#ea580c", "#d97706", "#16a34a", "#2563eb", "#7c3aed", "#db2777", "#6b7280"]
 
 export const LIMITS = { title: 200, note: 500, task: 1000, taskNote: 2000, statusName: 30 }
 
@@ -37,12 +37,12 @@ export type Task = {
   position: number
   boardPosition: number
 }
-export type Settings = { id: 'settings'; theme: ThemeId; mode: Mode }
+export type Settings = { id: "settings"; theme: ThemeId; mode: Mode }
 
-export const DEFAULT_SETTINGS: Settings = { id: 'settings', theme: 'roxo', mode: 'system' }
+export const DEFAULT_SETTINGS: Settings = { id: "settings", theme: "roxo", mode: "system" }
 
-export const DEFAULT_STATUSES: Pick<Status, 'name' | 'color' | 'done'>[] = [
-  { name: 'A Fazer', color: '#6b7280', done: false },
-  { name: 'Em Andamento', color: '#2563eb', done: false },
-  { name: 'Concluído', color: '#16a34a', done: true },
+export const DEFAULT_STATUSES: Pick<Status, "name" | "color" | "done">[] = [
+  { name: "A Fazer", color: "#6b7280", done: false },
+  { name: "Em Andamento", color: "#2563eb", done: false },
+  { name: "Concluído", color: "#16a34a", done: true },
 ]

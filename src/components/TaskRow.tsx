@@ -1,18 +1,21 @@
-import { ArrowDown, ArrowUp, CircleDot, GripVertical, Plus, StickyNote, Trash2 } from 'lucide-react'
-import { useState, type FormEvent } from 'react'
-import { useActions } from '#/data/actions'
-import { chipHidden, statusOf } from '#/lib/status'
-import { LIMITS, type Section, type Status, type Task } from '#/lib/types'
-import { useSortableItem } from './dnd'
-import { InlineEdit } from './InlineEdit'
-import { Menu, MenuItem } from './Popover'
-import { StatusChip, StatusOptions, StatusPicker } from './Status'
-import { VoiceButton } from './VoiceButton'
+import { ArrowDown, ArrowUp, CircleDot, GripVertical, Plus, StickyNote, Trash2 } from "lucide-react"
+import { type FormEvent, useState } from "react"
+import { useActions } from "#/data/actions"
+import { chipHidden, statusOf } from "#/lib/status"
+import { LIMITS, type Section, type Status, type Task } from "#/lib/types"
+import { useSortableItem } from "./dnd"
+import { InlineEdit } from "./InlineEdit"
+import { Menu, MenuItem } from "./Popover"
+import { StatusChip, StatusOptions, StatusPicker } from "./Status"
+import { VoiceButton } from "./VoiceButton"
 
 export function TaskRow({ task, siblings, statuses }: { task: Task; siblings: Task[]; statuses: Status[] }) {
-  const { setNodeRef, setActivatorNodeRef, attributes, listeners, style, isDragging } = useSortableItem(task.id, 'tarefa arrastável')
+  const { setNodeRef, setActivatorNodeRef, attributes, listeners, style, isDragging } = useSortableItem(
+    task.id,
+    "tarefa arrastável"
+  )
   const a = useActions()
-  const [menu, setMenu] = useState<'actions' | 'status'>('actions')
+  const [menu, setMenu] = useState<"actions" | "status">("actions")
   const [editingNote, setEditingNote] = useState(false)
   const i = siblings.findIndex((t) => t.id === task.id)
   const status = statusOf(task, statuses)
@@ -21,7 +24,7 @@ export function TaskRow({ task, siblings, statuses }: { task: Task; siblings: Ta
     <div
       ref={setNodeRef}
       style={style}
-      className={`group flex items-start gap-1.5 border-t border-line py-2 first:border-t-0 ${isDragging ? 'drag-ghost' : ''}`}
+      className={`group flex items-start gap-1.5 border-t border-line py-2 first:border-t-0 ${isDragging ? "drag-ghost" : ""}`}
     >
       <button
         type="button"
@@ -50,13 +53,15 @@ export function TaskRow({ task, siblings, statuses }: { task: Task; siblings: Ta
           maxLength={LIMITS.task}
           label="Texto da tarefa"
           onSave={(text) => a.updateTask(task.id, { text })}
-          className={task.done ? 'text-ink-soft line-through decoration-ink-soft/40' : ''}
+          className={task.done ? "text-ink-soft line-through decoration-ink-soft/40" : ""}
         />
         {status && !chipHidden(task, statuses) && (
           <StatusPicker
             task={task}
             statuses={statuses}
-            trigger={(p) => <StatusChip {...p} status={status} aria-label={`Status: ${status.name}. Alterar`} className="ml-1.5" />}
+            trigger={(p) => (
+              <StatusChip {...p} status={status} aria-label={`Status: ${status.name}. Alterar`} className="ml-1.5" />
+            )}
           />
         )}
         {(task.note || editingNote) && (
@@ -77,23 +82,27 @@ export function TaskRow({ task, siblings, statuses }: { task: Task; siblings: Ta
           </div>
         )}
       </div>
-      <Menu label="Ações da tarefa" quiet onClose={() => setMenu('actions')}>
+      <Menu label="Ações da tarefa" quiet onClose={() => setMenu("actions")}>
         {(close) =>
-          menu === 'status' ? (
+          menu === "status" ? (
             <StatusOptions task={task} statuses={statuses} onDone={close} />
           ) : (
             <>
               <MenuItem icon={ArrowUp} disabled={i <= 0} onClick={() => (a.moveTask(siblings, task.id, -1), close())}>
                 Subir
               </MenuItem>
-              <MenuItem icon={ArrowDown} disabled={i >= siblings.length - 1} onClick={() => (a.moveTask(siblings, task.id, 1), close())}>
+              <MenuItem
+                icon={ArrowDown}
+                disabled={i >= siblings.length - 1}
+                onClick={() => (a.moveTask(siblings, task.id, 1), close())}
+              >
                 Descer
               </MenuItem>
-              <MenuItem icon={CircleDot} onClick={() => setMenu('status')}>
-                Status{status ? `: ${status.name}` : ''}
+              <MenuItem icon={CircleDot} onClick={() => setMenu("status")}>
+                Status{status ? `: ${status.name}` : ""}
               </MenuItem>
               <MenuItem icon={StickyNote} onClick={() => (setEditingNote(true), close())}>
-                {task.note ? 'Editar nota' : 'Adicionar nota'}
+                {task.note ? "Editar nota" : "Adicionar nota"}
               </MenuItem>
               <MenuItem icon={Trash2} danger onClick={() => (a.deleteTask(task.id), close())}>
                 Deletar tarefa
@@ -108,13 +117,15 @@ export function TaskRow({ task, siblings, statuses }: { task: Task; siblings: Ta
 
 export function NewTaskInput({ section }: { section: Section }) {
   const a = useActions()
-  const [text, setText] = useState('')
+  const [text, setText] = useState("")
   const submit = (e: FormEvent) => {
     e.preventDefault()
     const v = text.trim()
-    if (!v) return
+    if (!v) {
+      return
+    }
     a.addTask(section, v)
-    setText('')
+    setText("")
   }
   return (
     <form onSubmit={submit} className="flex items-center gap-2.5 border-t border-line py-1.5 pl-1">

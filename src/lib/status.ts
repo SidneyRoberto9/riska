@@ -1,10 +1,10 @@
-import type { Status, Task } from './types'
+import type { Status, Task } from "./types"
 
 // Every function takes ONE page's statuses sorted by position.
-type TaskState = Pick<Task, 'statusId' | 'done'>
+type TaskState = Pick<Task, "statusId" | "done">
 
 // A null (or deleted) status means the page's first column, so tasks never disappear from the board
-export const statusOf = (task: Pick<Task, 'statusId'>, statuses: Status[]): Status | undefined =>
+export const statusOf = (task: Pick<Task, "statusId">, statuses: Status[]): Status | undefined =>
   statuses.find((s) => s.id === task.statusId) ?? statuses[0]
 
 export const firstDone = (statuses: Status[]) => statuses.find((s) => s.done)
@@ -27,6 +27,8 @@ export function chipHidden(task: TaskState, statuses: Status[]) {
 // Where a deleted column's tasks go: the previous column, or the next one when deleting the first
 export function neighbour(statuses: Status[], id: string): Status | undefined {
   const i = statuses.findIndex((s) => s.id === id)
-  if (i < 0) return undefined
+  if (i < 0) {
+    return undefined
+  }
   return statuses[i - 1] ?? statuses[i + 1]
 }

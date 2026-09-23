@@ -1,11 +1,11 @@
-import { ArrowDown, ArrowUp, GripVertical, Highlighter, StickyNote, Trash2 } from 'lucide-react'
-import { useState } from 'react'
-import { useActions } from '#/data/actions'
-import { LIMITS, type Section, type Status, type Task } from '#/lib/types'
-import { ColumnItems, useSortableColumn } from './dnd'
-import { InlineEdit } from './InlineEdit'
-import { Menu, MenuItem } from './Popover'
-import { NewTaskInput, TaskRow } from './TaskRow'
+import { ArrowDown, ArrowUp, GripVertical, Highlighter, StickyNote, Trash2 } from "lucide-react"
+import { useState } from "react"
+import { useActions } from "#/data/actions"
+import { LIMITS, type Section, type Status, type Task } from "#/lib/types"
+import { ColumnItems, useSortableColumn } from "./dnd"
+import { InlineEdit } from "./InlineEdit"
+import { Menu, MenuItem } from "./Popover"
+import { NewTaskInput, TaskRow } from "./TaskRow"
 
 export function SectionCard({
   section,
@@ -30,8 +30,8 @@ export function SectionCard({
       ref={setNodeRef}
       style={style}
       className={`mb-3.5 rounded-2xl border px-[18px] pt-[18px] pb-2 ${
-        section.highlight ? 'border-transparent bg-warn-soft' : 'border-line bg-surface'
-      } ${isDragging ? 'drag-ghost' : ''}`}
+        section.highlight ? "border-transparent bg-warn-soft" : "border-line bg-surface"
+      } ${isDragging ? "drag-ghost" : ""}`}
     >
       <div className="group mb-2.5 flex items-baseline gap-2">
         <button
@@ -44,7 +44,9 @@ export function SectionCard({
         >
           <GripVertical size={16} aria-hidden />
         </button>
-        <span className={`font-display text-[0.85rem] font-extrabold ${section.highlight ? 'text-warn' : 'text-accent'}`}>
+        <span
+          className={`font-display text-[0.85rem] font-extrabold ${section.highlight ? "text-warn" : "text-accent"}`}
+        >
           {index + 1}
         </span>
         <h2 className="m-0 min-w-0 flex-1 text-[1.02rem] font-bold">
@@ -59,24 +61,37 @@ export function SectionCard({
         <Menu label="Ações da seção">
           {(close) => (
             <>
-              <MenuItem icon={ArrowUp} disabled={i <= 0} onClick={() => (a.moveSection(siblings, section.id, -1), close())}>
+              <MenuItem
+                icon={ArrowUp}
+                disabled={i <= 0}
+                onClick={() => (a.moveSection(siblings, section.id, -1), close())}
+              >
                 Subir
               </MenuItem>
-              <MenuItem icon={ArrowDown} disabled={i >= siblings.length - 1} onClick={() => (a.moveSection(siblings, section.id, 1), close())}>
+              <MenuItem
+                icon={ArrowDown}
+                disabled={i >= siblings.length - 1}
+                onClick={() => (a.moveSection(siblings, section.id, 1), close())}
+              >
                 Descer
               </MenuItem>
-              <MenuItem icon={Highlighter} onClick={() => (a.updateSection(section.id, { highlight: !section.highlight }), close())}>
-                {section.highlight ? 'Remover destaque' : 'Destacar'}
+              <MenuItem
+                icon={Highlighter}
+                onClick={() => (a.updateSection(section.id, { highlight: !section.highlight }), close())}
+              >
+                {section.highlight ? "Remover destaque" : "Destacar"}
               </MenuItem>
               <MenuItem icon={StickyNote} onClick={() => (setEditingNote(true), close())}>
-                {section.note ? 'Editar nota' : 'Adicionar nota'}
+                {section.note ? "Editar nota" : "Adicionar nota"}
               </MenuItem>
               <MenuItem
                 icon={Trash2}
                 danger
                 onClick={() => {
                   close()
-                  if (confirm(`Deletar a seção “${section.title}” e suas tarefas?`)) a.deleteSection(section.id)
+                  if (confirm(`Deletar a seção “${section.title}” e suas tarefas?`)) {
+                    a.deleteSection(section.id)
+                  }
                 }}
               >
                 Deletar seção

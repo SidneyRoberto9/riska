@@ -1,19 +1,40 @@
-import { ArrowLeft, ArrowRight, CheckCheck, CircleDot, GripVertical, Palette, Plus, StickyNote, Trash2, X } from 'lucide-react'
-import { useRef, useState, type FormEvent } from 'react'
-import { useActions } from '#/data/actions'
-import { useSetPageSearch } from '#/data/page-search'
-import { neighbour, statusOf } from '#/lib/status'
-import { LIMITS, type Section, type Status, type Task } from '#/lib/types'
-import { ColumnItems, DragPreview, SortableBoard, SortableColumns, dragFrom, useClickGuard, useColumnItems, useSortableColumn, useSortableItem } from './dnd'
-import { InlineEdit } from './InlineEdit'
-import { Menu, MenuItem, Popover } from './Popover'
-import { StatusEditor, StatusOptions } from './Status'
-import { VoiceButton } from './VoiceButton'
+import {
+  ArrowLeft,
+  ArrowRight,
+  CheckCheck,
+  CircleDot,
+  GripVertical,
+  Palette,
+  Plus,
+  StickyNote,
+  Trash2,
+  X,
+} from "lucide-react"
+import { type FormEvent, useRef, useState } from "react"
+import { useActions } from "#/data/actions"
+import { useSetPageSearch } from "#/data/page-search"
+import { neighbour, statusOf } from "#/lib/status"
+import { LIMITS, type Section, type Status, type Task } from "#/lib/types"
+import {
+  ColumnItems,
+  DragPreview,
+  dragFrom,
+  SortableBoard,
+  SortableColumns,
+  useClickGuard,
+  useColumnItems,
+  useSortableColumn,
+  useSortableItem,
+} from "./dnd"
+import { InlineEdit } from "./InlineEdit"
+import { Menu, MenuItem, Popover } from "./Popover"
+import { StatusEditor, StatusOptions } from "./Status"
+import { VoiceButton } from "./VoiceButton"
 
-const COLUMN_W = 'w-[min(85vw,300px)]'
+const COLUMN_W = "w-[min(85vw,300px)]"
 // Columns end above the viewport bottom (page header ≈ 11.75rem above, scrollbar gutter + footer ≈ 3.25rem below)
 // so the page itself doesn't scroll; cards scroll inside the column
-const COLUMN_MAX_H = 'max-h-[calc(100dvh-15rem)]'
+const COLUMN_MAX_H = "max-h-[calc(100dvh-15rem)]"
 
 export function Board({
   pageId,
@@ -35,8 +56,14 @@ export function Board({
     return (
       <div className="mx-auto max-w-md rounded-2xl border border-dashed border-line p-8 text-center">
         <p className="m-0 font-semibold">Nenhuma seção ainda</p>
-        <p className="m-0 mt-1 text-sm text-ink-soft">O quadro organiza as tarefas das seções. Crie uma seção na lista primeiro.</p>
-        <button type="button" onClick={() => setSearch({ view: undefined })} className="mt-4 min-h-10 rounded-xl bg-accent px-4 font-semibold text-surface">
+        <p className="m-0 mt-1 text-sm text-ink-soft">
+          O quadro organiza as tarefas das seções. Crie uma seção na lista primeiro.
+        </p>
+        <button
+          type="button"
+          onClick={() => setSearch({ view: undefined })}
+          className="mt-4 min-h-10 rounded-xl bg-accent px-4 font-semibold text-surface"
+        >
           Ir para a lista
         </button>
       </div>
@@ -47,9 +74,13 @@ export function Board({
   const statusById = new Map(statuses.map((s) => [s.id, s]))
   const columns = statuses.map((s) => ({ id: s.id, items: [] as string[] }))
   const column = new Map(columns.map((c) => [c.id, c]))
-  for (const t of [...tasks].sort((x, y) => x.boardPosition - y.boardPosition || x.position - y.position || x.id.localeCompare(y.id))) {
+  for (const t of [...tasks].sort(
+    (x, y) => x.boardPosition - y.boardPosition || x.position - y.position || x.id.localeCompare(y.id)
+  )) {
     const s = statusOf(t, statuses)
-    if (s) column.get(s.id)?.items.push(t.id)
+    if (s) {
+      column.get(s.id)?.items.push(t.id)
+    }
   }
   // Section names on cards only help when there is more than one section
   const sectionTitle = sections.length > 1 ? new Map(sections.map((s) => [s.id, s.title])) : null
@@ -63,10 +94,14 @@ export function Board({
         a.reorderBoard(order, from !== to && status ? { id, status } : undefined)
       }}
       onColumnsCommit={a.reorderStatuses}
-      label={(kind, id) => (kind === 'item' ? `tarefa “${byId.get(id)?.text ?? ''}”` : `coluna “${statusById.get(id)?.name ?? ''}”`)}
+      label={(kind, id) =>
+        kind === "item" ? `tarefa “${byId.get(id)?.text ?? ""}”` : `coluna “${statusById.get(id)?.name ?? ""}”`
+      }
       renderOverlay={(kind, id) => {
         const t = byId.get(id)
-        if (kind === 'item') return t && <CardFace task={t} sectionTitle={sectionTitle?.get(t.sectionId)} />
+        if (kind === "item") {
+          return t && <CardFace task={t} sectionTitle={sectionTitle?.get(t.sectionId)} />
+        }
         return <DragPreview strong>{statusById.get(id)?.name}</DragPreview>
       }}
     >
@@ -75,7 +110,19 @@ export function Board({
           {(ids) =>
             ids.map((id) => {
               const s = statusById.get(id)
-              return s && <Column key={id} status={s} statuses={statuses} sections={sections} byId={byId} sectionTitle={sectionTitle} onOpen={onOpen} />
+              return (
+                s && (
+                  <Column
+                    key={id}
+                    status={s}
+                    statuses={statuses}
+                    sections={sections}
+                    byId={byId}
+                    sectionTitle={sectionTitle}
+                    onOpen={onOpen}
+                  />
+                )
+              )
             })
           }
         </SortableColumns>
@@ -108,17 +155,21 @@ function Column({
 
   const remove = () => {
     const target = neighbour(statuses, status.id)
-    if (!target) return
-    const moving = count === 1 ? '1 tarefa vai' : `${count} tarefas vão`
-    if (count === 0 || confirm(`Deletar a coluna “${status.name}”? ${moving} para “${target.name}”.`)) a.deleteStatus(status)
+    if (!target) {
+      return
+    }
+    const moving = count === 1 ? "1 tarefa vai" : `${count} tarefas vão`
+    if (count === 0 || confirm(`Deletar a coluna “${status.name}”? ${moving} para “${target.name}”.`)) {
+      a.deleteStatus(status)
+    }
   }
 
   return (
     <section
       ref={setNodeRef}
       style={style}
-      aria-label={`${status.name}, ${count} ${count === 1 ? 'tarefa' : 'tarefas'}`}
-      className={`flex ${COLUMN_W} ${COLUMN_MAX_H} shrink-0 snap-start flex-col rounded-2xl border border-line bg-surface/50 ${isDragging ? 'drag-ghost' : ''}`}
+      aria-label={`${status.name}, ${count} ${count === 1 ? "tarefa" : "tarefas"}`}
+      className={`flex ${COLUMN_W} ${COLUMN_MAX_H} shrink-0 snap-start flex-col rounded-2xl border border-line bg-surface/50 ${isDragging ? "drag-ghost" : ""}`}
     >
       <header className="group flex items-center gap-1.5 px-2 pt-2 pb-1">
         <button
@@ -133,7 +184,13 @@ function Column({
         </button>
         <span aria-hidden className="size-2.5 shrink-0 rounded-full" style={{ background: status.color }} />
         <h2 className="m-0 min-w-0 flex-1 truncate text-[0.95rem] font-bold">
-          <InlineEdit value={status.name} required maxLength={LIMITS.statusName} label="Nome da coluna" onSave={(name) => a.updateStatus(status, { name })} />
+          <InlineEdit
+            value={status.name}
+            required
+            maxLength={LIMITS.statusName}
+            label="Nome da coluna"
+            onSave={(name) => a.updateStatus(status, { name })}
+          />
         </h2>
         <span aria-hidden className="rounded-full bg-line/70 px-2 text-xs font-bold tabular-nums text-ink-soft">
           {count}
@@ -148,12 +205,20 @@ function Column({
                   Editar nome e cor
                 </MenuItem>
                 <MenuItem icon={CheckCheck} onClick={() => (a.updateStatus(status, { done: !status.done }), close())}>
-                  {status.done ? 'Não conta como concluída' : 'Conta como concluída'}
+                  {status.done ? "Não conta como concluída" : "Conta como concluída"}
                 </MenuItem>
-                <MenuItem icon={ArrowLeft} disabled={i <= 0} onClick={() => (a.moveStatus(statuses, status.id, -1), close())}>
+                <MenuItem
+                  icon={ArrowLeft}
+                  disabled={i <= 0}
+                  onClick={() => (a.moveStatus(statuses, status.id, -1), close())}
+                >
                   Mover para a esquerda
                 </MenuItem>
-                <MenuItem icon={ArrowRight} disabled={i >= statuses.length - 1} onClick={() => (a.moveStatus(statuses, status.id, 1), close())}>
+                <MenuItem
+                  icon={ArrowRight}
+                  disabled={i >= statuses.length - 1}
+                  onClick={() => (a.moveStatus(statuses, status.id, 1), close())}
+                >
                   Mover para a direita
                 </MenuItem>
                 <MenuItem icon={Trash2} danger disabled={statuses.length <= 1} onClick={() => (close(), remove())}>
@@ -164,11 +229,24 @@ function Column({
           }
         </Menu>
       </header>
-      <ColumnItems id={status.id} className="flex min-h-16 flex-1 flex-col gap-2 overflow-y-auto overscroll-contain px-2 pb-2">
+      <ColumnItems
+        id={status.id}
+        className="flex min-h-16 flex-1 flex-col gap-2 overflow-y-auto overscroll-contain px-2 pb-2"
+      >
         {(ids) =>
           ids.map((id) => {
             const t = byId.get(id)
-            return t && <Card key={id} task={t} statuses={statuses} sectionTitle={sectionTitle?.get(t.sectionId)} onOpen={onOpen} />
+            return (
+              t && (
+                <Card
+                  key={id}
+                  task={t}
+                  statuses={statuses}
+                  sectionTitle={sectionTitle?.get(t.sectionId)}
+                  onOpen={onOpen}
+                />
+              )
+            )
           })
         }
       </ColumnItems>
@@ -185,7 +263,9 @@ function CardFace({ task, sectionTitle }: { task: Task; sectionTitle?: string })
         <span aria-hidden className="-m-2.75 p-2.75">
           <input type="checkbox" className="check" checked={task.done} readOnly tabIndex={-1} />
         </span>
-        <p className={`m-0 min-w-0 flex-1 text-[0.9rem] leading-snug break-words line-clamp-3 ${task.done ? 'text-ink-soft line-through decoration-ink-soft/40' : ''}`}>
+        <p
+          className={`m-0 min-w-0 flex-1 text-[0.9rem] leading-snug break-words line-clamp-3 ${task.done ? "text-ink-soft line-through decoration-ink-soft/40" : ""}`}
+        >
           {task.text}
         </p>
         <span aria-hidden className="-my-1.5 size-10 shrink-0" />
@@ -200,10 +280,23 @@ function CardFace({ task, sectionTitle }: { task: Task; sectionTitle?: string })
   )
 }
 
-function Card({ task, statuses, sectionTitle, onOpen }: { task: Task; statuses: Status[]; sectionTitle?: string; onOpen: (id: string) => void }) {
+function Card({
+  task,
+  statuses,
+  sectionTitle,
+  onOpen,
+}: {
+  task: Task
+  statuses: Status[]
+  sectionTitle?: string
+  onOpen: (id: string) => void
+}) {
   const a = useActions()
-  const [menu, setMenu] = useState<'actions' | 'status'>('actions')
-  const { setNodeRef, setActivatorNodeRef, attributes, listeners, style, isDragging } = useSortableItem(task.id, 'cartão arrastável')
+  const [menu, setMenu] = useState<"actions" | "status">("actions")
+  const { setNodeRef, setActivatorNodeRef, attributes, listeners, style, isDragging } = useSortableItem(
+    task.id,
+    "cartão arrastável"
+  )
   const blocked = useClickGuard()
 
   return (
@@ -213,13 +306,21 @@ function Card({ task, statuses, sectionTitle, onOpen }: { task: Task; statuses: 
       {...dragFrom(listeners)}
       // Clicks anywhere on the card open it, except on its own controls (checkbox, menu)
       onClick={(e) => {
-        if (!(e.target as Element).closest('[data-no-drag]') && !blocked()) onOpen(task.id)
+        if (!(e.target as Element).closest("[data-no-drag]") && !blocked()) {
+          onOpen(task.id)
+        }
       }}
-      className={`group cursor-grab rounded-xl border border-line bg-surface p-2.5 shadow-sm transition-shadow hover:shadow-md ${isDragging ? 'drag-ghost' : ''}`}
+      className={`group cursor-grab rounded-xl border border-line bg-surface p-2.5 shadow-sm transition-shadow hover:shadow-md ${isDragging ? "drag-ghost" : ""}`}
     >
       <div className="flex items-start gap-2">
         <label data-no-drag className="-m-2.75 cursor-pointer p-2.75">
-          <input type="checkbox" className="check" checked={task.done} onChange={(e) => a.setTaskDone(task, e.target.checked)} aria-label={`Concluída: ${task.text}`} />
+          <input
+            type="checkbox"
+            className="check"
+            checked={task.done}
+            onChange={(e) => a.setTaskDone(task, e.target.checked)}
+            aria-label={`Concluída: ${task.text}`}
+          />
         </label>
         {/* Enter opens the details; Space lifts the card (keyboard drag starts only from this activator) */}
         <button
@@ -227,18 +328,18 @@ function Card({ task, statuses, sectionTitle, onOpen }: { task: Task; statuses: 
           ref={setActivatorNodeRef}
           {...attributes}
           aria-haspopup="dialog"
-          className={`min-w-0 flex-1 cursor-pointer text-left text-[0.9rem] leading-snug break-words line-clamp-3 ${task.done ? 'text-ink-soft line-through decoration-ink-soft/40' : ''}`}
+          className={`min-w-0 flex-1 cursor-pointer text-left text-[0.9rem] leading-snug break-words line-clamp-3 ${task.done ? "text-ink-soft line-through decoration-ink-soft/40" : ""}`}
         >
           {task.text}
         </button>
         <span data-no-drag className="-my-1.5">
-          <Menu label="Ações da tarefa" quiet onClose={() => setMenu('actions')}>
+          <Menu label="Ações da tarefa" quiet onClose={() => setMenu("actions")}>
             {(close) =>
-              menu === 'status' ? (
+              menu === "status" ? (
                 <StatusOptions task={task} statuses={statuses} onDone={close} />
               ) : (
                 <>
-                  <MenuItem icon={CircleDot} onClick={() => setMenu('status')}>
+                  <MenuItem icon={CircleDot} onClick={() => setMenu("status")}>
                     Mover para…
                   </MenuItem>
                   <MenuItem icon={Trash2} danger onClick={() => (a.deleteTask(task.id), close())}>
@@ -264,8 +365,8 @@ function AddCard({ status, sections }: { status: Status; sections: Section[] }) 
   const a = useActions()
   const key = `checklist-board-section-${status.pageId}`
   const [open, setOpen] = useState(false)
-  const [text, setText] = useState('')
-  const [sectionId, setSectionId] = useState('')
+  const [text, setText] = useState("")
+  const [sectionId, setSectionId] = useState("")
   const input = useRef<HTMLInputElement>(null)
   const refocus = useRef(false)
   const section = sections.find((s) => s.id === sectionId) ?? sections[0]
@@ -273,16 +374,18 @@ function AddCard({ status, sections }: { status: Status; sections: Section[] }) 
   const submit = (e: FormEvent) => {
     e.preventDefault()
     const v = text.trim()
-    if (!v) return
+    if (!v) {
+      return
+    }
     a.addTask(section, v, status)
-    setText('')
+    setText("")
     input.current?.focus()
   }
 
   // Re-read on open: another column may have picked a section since
   const show = () => {
     try {
-      setSectionId(localStorage.getItem(key) ?? '')
+      setSectionId(localStorage.getItem(key) ?? "")
     } catch {}
     setOpen(true)
   }
@@ -313,7 +416,9 @@ function AddCard({ status, sections }: { status: Status; sections: Section[] }) 
     <form
       onSubmit={submit}
       onKeyDown={(e) => {
-        if (e.key === 'Escape') hide()
+        if (e.key === "Escape") {
+          hide()
+        }
       }}
       className="mx-2 mb-2 space-y-2 rounded-xl border border-accent bg-surface p-2"
     >
@@ -351,10 +456,19 @@ function AddCard({ status, sections }: { status: Status; sections: Section[] }) 
             ))}
           </select>
         )}
-        <button type="submit" disabled={!text.trim()} className="ml-auto min-h-10 rounded-lg bg-accent px-3 text-sm font-semibold text-surface disabled:opacity-40">
+        <button
+          type="submit"
+          disabled={!text.trim()}
+          className="ml-auto min-h-10 rounded-lg bg-accent px-3 text-sm font-semibold text-surface disabled:opacity-40"
+        >
           Adicionar
         </button>
-        <button type="button" onClick={hide} aria-label="Fechar" className="grid size-10 place-items-center rounded-lg text-ink-soft hover:bg-accent-soft">
+        <button
+          type="button"
+          onClick={hide}
+          aria-label="Fechar"
+          className="grid size-10 place-items-center rounded-lg text-ink-soft hover:bg-accent-soft"
+        >
           <X size={16} aria-hidden />
         </button>
       </div>

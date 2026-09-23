@@ -1,12 +1,12 @@
-import { useRef, useState } from 'react'
-import { VoiceButton } from './VoiceButton'
+import { useRef, useState } from "react"
+import { VoiceButton } from "./VoiceButton"
 
 // Click to edit; Enter or blur saves, Esc cancels. Empty value is ignored when `required`.
 export function InlineEdit({
   value,
   onSave,
-  placeholder = '',
-  className = '',
+  placeholder = "",
+  className = "",
   multiline = false,
   required = false,
   maxLength,
@@ -14,7 +14,7 @@ export function InlineEdit({
   onDone,
   label,
   voice,
-  viewClassName = 'inline',
+  viewClassName = "inline",
 }: {
   value: string
   onSave: (value: string) => void
@@ -59,7 +59,9 @@ export function InlineEdit({
       return
     }
     const v = draft.trim()
-    if (v !== value && (v || !required)) onSave(v)
+    if (v !== value && (v || !required)) {
+      onSave(v)
+    }
   }
 
   const props = {
@@ -67,16 +69,16 @@ export function InlineEdit({
     value: draft,
     maxLength,
     placeholder,
-    'aria-label': label,
+    "aria-label": label,
     onChange: (e: { target: { value: string } }) => setDraft(e.target.value),
     onBlur: commit,
     onKeyDown: (e: React.KeyboardEvent<HTMLInputElement | HTMLTextAreaElement>) => {
-      if (e.key === 'Escape') {
+      if (e.key === "Escape") {
         // Also keeps an enclosing <dialog> from closing on the same Esc
         e.preventDefault()
         cancelled.current = true
         e.currentTarget.blur()
-      } else if (e.key === 'Enter' && !e.shiftKey) {
+      } else if (e.key === "Enter" && !e.shiftKey) {
         e.preventDefault()
         e.currentTarget.blur()
       }
@@ -89,7 +91,9 @@ export function InlineEdit({
   ) : (
     <input {...props} />
   )
-  if (!voice) return field
+  if (!voice) {
+    return field
+  }
   return (
     <span className="flex items-start gap-1">
       {field}

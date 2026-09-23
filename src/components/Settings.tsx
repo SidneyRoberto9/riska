@@ -1,17 +1,17 @@
-import { useQueryClient } from '@tanstack/react-query'
-import { useNavigate, useRouter } from '@tanstack/react-router'
-import { Check, Link2, Monitor, Moon, Settings2, Sun } from 'lucide-react'
-import { useState, type FormEvent } from 'react'
-import { useActions } from '#/data/actions'
-import { forgetSession } from '#/data/recent'
-import { forgetServerSource } from '#/data/source'
-import { useSource } from '#/data/source-context'
-import { useSettings } from '#/data/theme'
-import { MODES, THEMES } from '#/lib/types'
-import { deleteSessionFn } from '#/server/session'
-import { Popover } from './Popover'
+import { useQueryClient } from "@tanstack/react-query"
+import { useNavigate, useRouter } from "@tanstack/react-router"
+import { Check, Link2, Monitor, Moon, Settings2, Sun } from "lucide-react"
+import { type FormEvent, useState } from "react"
+import { useActions } from "#/data/actions"
+import { forgetSession } from "#/data/recent"
+import { forgetServerSource } from "#/data/source"
+import { useSource } from "#/data/source-context"
+import { useSettings } from "#/data/theme"
+import { MODES, THEMES } from "#/lib/types"
+import { deleteSessionFn } from "#/server/session"
+import { Popover } from "./Popover"
 
-const label = 'mb-2 text-[0.82rem] font-semibold text-ink-soft'
+const label = "mb-2 text-[0.82rem] font-semibold text-ink-soft"
 const modeIcons = { light: Sun, dark: Moon, system: Monitor }
 
 export function SettingsButton() {
@@ -20,7 +20,11 @@ export function SettingsButton() {
     <Popover
       className="w-72 space-y-4 p-3"
       trigger={(p) => (
-        <button {...p} aria-label="Configurações" className="grid size-10 place-items-center rounded-xl text-ink-soft hover:bg-accent-soft hover:text-accent">
+        <button
+          {...p}
+          aria-label="Configurações"
+          className="grid size-10 place-items-center rounded-xl text-ink-soft hover:bg-accent-soft hover:text-accent"
+        >
           <Settings2 size={20} aria-hidden />
         </button>
       )}
@@ -96,13 +100,13 @@ function ShareLink({ slug }: { slug: string }) {
           setCopied(true)
           setTimeout(() => setCopied(false), 1500)
         } catch {
-          window.prompt('Copie o link:', url)
+          window.prompt("Copie o link:", url)
         }
       }}
       className="flex min-h-10 w-full items-center justify-center gap-2 rounded-lg border border-line font-semibold hover:bg-accent-soft"
     >
       {copied ? <Check size={16} aria-hidden className="text-done" /> : <Link2 size={16} aria-hidden />}
-      <span aria-live="polite">{copied ? 'Link copiado' : 'Copiar link da sessão'}</span>
+      <span aria-live="polite">{copied ? "Link copiado" : "Copiar link da sessão"}</span>
     </button>
   )
 }
@@ -111,37 +115,37 @@ function DeleteSession({ slug }: { slug: string }) {
   const navigate = useNavigate()
   const router = useRouter()
   const queryClient = useQueryClient()
-  const [confirm, setConfirm] = useState('')
-  const [pin, setPin] = useState('')
-  const [error, setError] = useState('')
+  const [confirm, setConfirm] = useState("")
+  const [pin, setPin] = useState("")
+  const [error, setError] = useState("")
   const [busy, setBusy] = useState(false)
 
   const submit = async (e: FormEvent) => {
     e.preventDefault()
     setBusy(true)
-    setError('')
+    setError("")
     try {
       const r = await deleteSessionFn({ data: { slug, pin, confirm } })
       if (!r.ok) {
-        setError(r.reason === 'pin' ? 'PIN incorreto.' : 'O nome digitado não confere.')
+        setError(r.reason === "pin" ? "PIN incorreto." : "O nome digitado não confere.")
         return
       }
       forgetSession(slug)
       forgetServerSource(slug)
       queryClient.removeQueries({ predicate: (q) => q.queryKey[1] === slug })
-      navigate({ to: '/' })
+      navigate({ to: "/" })
     } catch (err) {
-      if ((err as Error)?.message === 'UNAUTHORIZED') {
+      if ((err as Error)?.message === "UNAUTHORIZED") {
         router.invalidate()
         return
       }
-      setError('Não foi possível deletar. Confira o nome e o PIN e tente de novo.')
+      setError("Não foi possível deletar. Confira o nome e o PIN e tente de novo.")
     } finally {
       setBusy(false)
     }
   }
 
-  const input = 'w-full rounded-lg border border-line bg-ground px-3 py-2 focus-visible:border-warn'
+  const input = "w-full rounded-lg border border-line bg-ground px-3 py-2 focus-visible:border-warn"
   return (
     <details className="rounded-lg border border-line p-2">
       <summary className="flex min-h-8 cursor-pointer items-center font-semibold text-warn">Deletar sessão</summary>
@@ -159,7 +163,7 @@ function DeleteSession({ slug }: { slug: string }) {
         />
         <input
           value={pin}
-          onChange={(e) => setPin(e.target.value.replace(/\D/g, '').slice(0, 4))}
+          onChange={(e) => setPin(e.target.value.replace(/\D/g, "").slice(0, 4))}
           type="password"
           inputMode="numeric"
           autoComplete="off"
@@ -167,7 +171,11 @@ function DeleteSession({ slug }: { slug: string }) {
           aria-label="PIN"
           className={input}
         />
-        {error && <p role="alert" className="text-xs text-warn">{error}</p>}
+        {error && (
+          <p role="alert" className="text-xs text-warn">
+            {error}
+          </p>
+        )}
         <button
           disabled={busy || confirm !== slug || pin.length !== 4}
           className="w-full rounded-lg bg-warn py-2 font-semibold text-surface disabled:opacity-40"

@@ -1,40 +1,57 @@
-import { eq, useLiveQuery } from '@tanstack/react-db'
-import { ChevronLeft, Plus } from 'lucide-react'
-import { useRouter } from '@tanstack/react-router'
-import { useEffect, useRef, useState, type FormEvent } from 'react'
-import { useActions } from '#/data/actions'
-import { useSetPageSearch } from '#/data/page-search'
-import { useSource } from '#/data/source-context'
-import { LIMITS, type Task } from '#/lib/types'
-import { Board } from './Board'
-import { DragPreview, SortableBoard, SortableColumns } from './dnd'
-import { InlineEdit } from './InlineEdit'
-import { PagesLink } from './links'
-import { ProgressBar } from './ProgressBar'
-import { SectionCard } from './SectionCard'
-import { TaskDialog } from './TaskDialog'
-import { ViewToggle } from './ViewToggle'
+import { eq, useLiveQuery } from "@tanstack/react-db"
+import { useRouter } from "@tanstack/react-router"
+import { ChevronLeft, Plus } from "lucide-react"
+import { type FormEvent, useEffect, useRef, useState } from "react"
+import { useActions } from "#/data/actions"
+import { useSetPageSearch } from "#/data/page-search"
+import { useSource } from "#/data/source-context"
+import { LIMITS, type Task } from "#/lib/types"
+import { Board } from "./Board"
+import { DragPreview, SortableBoard, SortableColumns } from "./dnd"
+import { InlineEdit } from "./InlineEdit"
+import { PagesLink } from "./links"
+import { ProgressBar } from "./ProgressBar"
+import { SectionCard } from "./SectionCard"
+import { TaskDialog } from "./TaskDialog"
+import { ViewToggle } from "./ViewToggle"
 
-export function ChecklistView({ pageId, view, taskId }: { pageId: string; view?: 'quadro'; taskId?: string }) {
+export function ChecklistView({ pageId, view, taskId }: { pageId: string; view?: "quadro"; taskId?: string }) {
   const source = useSource()
   const a = useActions()
-  const { data: pages, isReady } = useLiveQuery((q) => q.from({ p: source.pages }).where(({ p }) => eq(p.id, pageId)), [source, pageId])
+  const { data: pages, isReady } = useLiveQuery(
+    (q) => q.from({ p: source.pages }).where(({ p }) => eq(p.id, pageId)),
+    [source, pageId]
+  )
   const { data: sections } = useLiveQuery(
-    (q) => q.from({ s: source.sections }).where(({ s }) => eq(s.pageId, pageId)).orderBy(({ s }) => s.position),
-    [source, pageId],
+    (q) =>
+      q
+        .from({ s: source.sections })
+        .where(({ s }) => eq(s.pageId, pageId))
+        .orderBy(({ s }) => s.position),
+    [source, pageId]
   )
   const { data: tasks, isReady: tasksReady } = useLiveQuery(
-    (q) => q.from({ t: source.tasks }).where(({ t }) => eq(t.pageId, pageId)).orderBy(({ t }) => t.position),
-    [source, pageId],
+    (q) =>
+      q
+        .from({ t: source.tasks })
+        .where(({ t }) => eq(t.pageId, pageId))
+        .orderBy(({ t }) => t.position),
+    [source, pageId]
   )
   const { data: statuses } = useLiveQuery(
-    (q) => q.from({ s: source.statuses }).where(({ s }) => eq(s.pageId, pageId)).orderBy(({ s }) => s.position),
-    [source, pageId],
+    (q) =>
+      q
+        .from({ s: source.statuses })
+        .where(({ s }) => eq(s.pageId, pageId))
+        .orderBy(({ s }) => s.position),
+    [source, pageId]
   )
 
   // Local mode only: pages saved before statuses existed get the defaults once
   useEffect(() => {
-    if (isReady && pages[0]) a.upgradeLocalPage(pageId)
+    if (isReady && pages[0]) {
+      a.upgradeLocalPage(pageId)
+    }
     // `a` is rebuilt every render and pages[0].id is pageId: run once per loaded page
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [isReady, pages[0]?.id])
@@ -52,12 +69,17 @@ export function ChecklistView({ pageId, view, taskId }: { pageId: string; view?:
   }
   const closeTask = () => {
     // Already gone from the URL (Back was pressed) or already closing: nothing to undo
-    if (closing.current || !new URLSearchParams(location.search).has('task')) return
+    if (closing.current || !new URLSearchParams(location.search).has("task")) {
+      return
+    }
     closing.current = true
-    if (openedHere.current) router.history.back()
-    else setSearch({ task: undefined }, { replace: true })
+    if (openedHere.current) {
+      router.history.back()
+    } else {
+      setSearch({ task: undefined }, { replace: true })
+    }
   }
-  const dialogTask = view === 'quadro' && taskId ? tasks.find((t) => t.id === taskId) : undefined
+  const dialogTask = view === "quadro" && taskId ? tasks.find((t) => t.id === taskId) : undefined
 
   useEffect(() => {
     if (!taskId) {
@@ -72,7 +94,9 @@ export function ChecklistView({ pageId, view, taskId }: { pageId: string; view?:
 
   const page = pages[0]
   if (!page) {
-    if (!isReady) return null
+    if (!isReady) {
+      return null
+    }
     return (
       <div className="pt-24 text-center">
         <h1 className="text-2xl font-extrabold">Página não encontrada</h1>
@@ -85,7 +109,9 @@ export function ChecklistView({ pageId, view, taskId }: { pageId: string; view?:
   }
 
   const bySection = new Map<string, Task[]>()
-  for (const t of tasks) bySection.set(t.sectionId, [...(bySection.get(t.sectionId) ?? []), t])
+  for (const t of tasks) {
+    bySection.set(t.sectionId, [...(bySection.get(t.sectionId) ?? []), t])
+  }
   const taskById = new Map(tasks.map((t) => [t.id, t]))
   const sectionById = new Map(sections.map((s) => [s.id, s]))
   const done = tasks.filter((t) => t.done).length
@@ -126,27 +152,50 @@ export function ChecklistView({ pageId, view, taskId }: { pageId: string; view?:
         </div>
       </header>
       <main>
-        {view === 'quadro' ? (
+        {view === "quadro" ? (
           <Board pageId={page.id} statuses={statuses} sections={sections} tasks={tasks} onOpen={openTask} />
         ) : (
           <>
             {sections.length === 0 && (
-              <p className="mb-3.5 text-[0.9rem] text-ink-soft">Comece criando uma seção, como “Hortifruti” ou “Hoje”.</p>
+              <p className="mb-3.5 text-[0.9rem] text-ink-soft">
+                Comece criando uma seção, como “Hortifruti” ou “Hoje”.
+              </p>
             )}
             <SortableBoard
               columns={sections.map((s) => ({ id: s.id, items: (bySection.get(s.id) ?? []).map((t) => t.id) }))}
-              onItemsCommit={({ id, from, to, order }) => a.reorderTasks(order, from !== to ? { id, sectionId: to } : undefined)}
+              onItemsCommit={({ id, from, to, order }) =>
+                a.reorderTasks(order, from !== to ? { id, sectionId: to } : undefined)
+              }
               onColumnsCommit={a.reorderSections}
-              label={(kind, id) => (kind === 'item' ? `tarefa “${taskById.get(id)?.text ?? ''}”` : `seção “${sectionById.get(id)?.title ?? ''}”`)}
+              label={(kind, id) =>
+                kind === "item"
+                  ? `tarefa “${taskById.get(id)?.text ?? ""}”`
+                  : `seção “${sectionById.get(id)?.title ?? ""}”`
+              }
               renderOverlay={(kind, id) =>
-                kind === 'item' ? <DragPreview>{taskById.get(id)?.text}</DragPreview> : <DragPreview strong>{sectionById.get(id)?.title}</DragPreview>
+                kind === "item" ? (
+                  <DragPreview>{taskById.get(id)?.text}</DragPreview>
+                ) : (
+                  <DragPreview strong>{sectionById.get(id)?.title}</DragPreview>
+                )
               }
             >
               <SortableColumns>
                 {(ids) =>
                   ids.map((id, i) => {
                     const s = sectionById.get(id)
-                    return s && <SectionCard key={id} section={s} index={i} siblings={sections} taskById={taskById} statuses={statuses} />
+                    return (
+                      s && (
+                        <SectionCard
+                          key={id}
+                          section={s}
+                          index={i}
+                          siblings={sections}
+                          taskById={taskById}
+                          statuses={statuses}
+                        />
+                      )
+                    )
                   })
                 }
               </SortableColumns>
@@ -156,7 +205,7 @@ export function ChecklistView({ pageId, view, taskId }: { pageId: string; view?:
         )}
       </main>
       <footer className="pt-2 text-center text-[0.78rem] text-ink-soft">
-        {source.slug ? `Sincronizado na sessão ${source.slug}.` : 'Salvo só neste navegador.'}
+        {source.slug ? `Sincronizado na sessão ${source.slug}.` : "Salvo só neste navegador."}
       </footer>
       {dialogTask && (
         <TaskDialog
@@ -172,13 +221,15 @@ export function ChecklistView({ pageId, view, taskId }: { pageId: string; view?:
 }
 
 function NewSection({ onAdd }: { onAdd: (title: string) => void }) {
-  const [title, setTitle] = useState('')
+  const [title, setTitle] = useState("")
   const submit = (e: FormEvent) => {
     e.preventDefault()
     const v = title.trim()
-    if (!v) return
+    if (!v) {
+      return
+    }
     onAdd(v)
-    setTitle('')
+    setTitle("")
   }
   return (
     <form
@@ -195,7 +246,9 @@ function NewSection({ onAdd }: { onAdd: (title: string) => void }) {
         autoComplete="off"
         className="min-w-0 flex-1 rounded-lg bg-transparent py-2 font-display font-bold outline-none placeholder:text-ink-soft"
       />
-      {title.trim() && <button className="min-h-10 rounded-xl bg-accent px-4 font-semibold text-surface">Criar seção</button>}
+      {title.trim() && (
+        <button className="min-h-10 rounded-xl bg-accent px-4 font-semibold text-surface">Criar seção</button>
+      )}
     </form>
   )
 }

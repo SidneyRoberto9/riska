@@ -1,9 +1,9 @@
-import { useEffect } from 'react'
-import { useLiveQuery } from '@tanstack/react-db'
-import { DEFAULT_SETTINGS, type Settings } from '#/lib/types'
-import { useSource } from './source-context'
+import { useLiveQuery } from "@tanstack/react-db"
+import { useEffect } from "react"
+import { DEFAULT_SETTINGS, type Settings } from "#/lib/types"
+import { useSource } from "./source-context"
 
-export const LOCAL_THEME_KEY = 'checklist-theme'
+export const LOCAL_THEME_KEY = "checklist-theme"
 
 // Runs before hydration on /local pages so the saved theme paints without a flash
 export const localThemeScript = `try{if(location.pathname.startsWith('/local')){var t=JSON.parse(localStorage.getItem('${LOCAL_THEME_KEY}')||'null');if(t){document.documentElement.dataset.theme=t.theme;document.documentElement.dataset.mode=t.mode}}}catch(e){}`

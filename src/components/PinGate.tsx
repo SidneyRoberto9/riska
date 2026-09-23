@@ -1,31 +1,31 @@
-import { Link, useRouter } from '@tanstack/react-router'
-import { ChevronLeft, LockKeyhole } from 'lucide-react'
-import { useState } from 'react'
-import { loginFn } from '#/server/session'
+import { Link, useRouter } from "@tanstack/react-router"
+import { ChevronLeft, LockKeyhole } from "lucide-react"
+import { useState } from "react"
+import { loginFn } from "#/server/session"
 
 export function PinGate({ slug }: { slug: string }) {
   const router = useRouter()
-  const [pin, setPin] = useState('')
-  const [error, setError] = useState('')
+  const [pin, setPin] = useState("")
+  const [error, setError] = useState("")
   const [busy, setBusy] = useState(false)
 
   const submit = async (value: string) => {
     setBusy(true)
-    setError('')
+    setError("")
     try {
       const r = await loginFn({ data: { slug, pin: value } })
       if (r.ok) {
         await router.invalidate()
         return
       }
-      setPin('')
+      setPin("")
       setError(
-        r.reason === 'locked'
-          ? `Muitas tentativas. Tente de novo às ${new Date(r.until).toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' })}.`
-          : 'PIN incorreto. Tente de novo.',
+        r.reason === "locked"
+          ? `Muitas tentativas. Tente de novo às ${new Date(r.until).toLocaleTimeString("pt-BR", { hour: "2-digit", minute: "2-digit" })}.`
+          : "PIN incorreto. Tente de novo."
       )
     } catch {
-      setError('Sem conexão com o servidor. Tente de novo.')
+      setError("Sem conexão com o servidor. Tente de novo.")
     } finally {
       setBusy(false)
     }
@@ -47,7 +47,7 @@ export function PinGate({ slug }: { slug: string }) {
             key={i}
             aria-hidden
             className={`grid size-14 place-items-center rounded-2xl border-2 bg-surface transition-colors ${
-              error ? 'border-warn' : i === pin.length && !busy ? 'border-accent' : 'border-line'
+              error ? "border-warn" : i === pin.length && !busy ? "border-accent" : "border-line"
             }`}
           >
             {i < pin.length && <span className="size-3 rounded-full bg-ink" />}
@@ -64,10 +64,12 @@ export function PinGate({ slug }: { slug: string }) {
           aria-label="PIN de 4 dígitos"
           aria-invalid={!!error}
           onChange={(e) => {
-            const v = e.target.value.replace(/\D/g, '').slice(0, 4)
+            const v = e.target.value.replace(/\D/g, "").slice(0, 4)
             setPin(v)
-            setError('')
-            if (v.length === 4) submit(v)
+            setError("")
+            if (v.length === 4) {
+              submit(v)
+            }
           }}
           className="absolute inset-0 cursor-text opacity-0 outline-none"
         />
@@ -75,7 +77,10 @@ export function PinGate({ slug }: { slug: string }) {
       <p role="alert" className="mt-4 min-h-5 text-sm text-warn">
         {busy ? <span className="text-ink-soft">Verificando…</span> : error}
       </p>
-      <Link to="/" className="mt-6 inline-flex min-h-10 items-center gap-0.5 rounded-md px-2 text-sm text-ink-soft hover:text-accent">
+      <Link
+        to="/"
+        className="mt-6 inline-flex min-h-10 items-center gap-0.5 rounded-md px-2 text-sm text-ink-soft hover:text-accent"
+      >
         <ChevronLeft size={16} aria-hidden />
         Início
       </Link>

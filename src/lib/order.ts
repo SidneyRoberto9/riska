@@ -6,7 +6,9 @@ export const nextPosition = (items: Positioned[]) => items.reduce((max, x) => Ma
 export function renumber(ids: string[], current: Map<string, number>): Map<string, number> {
   const out = new Map<string, number>()
   ids.forEach((id, i) => {
-    if (current.get(id) !== i + 1) out.set(id, i + 1)
+    if (current.get(id) !== i + 1) {
+      out.set(id, i + 1)
+    }
   })
   return out
 }
@@ -15,7 +17,9 @@ export function renumber(ids: string[], current: Map<string, number>): Map<strin
 export function shift(ids: string[], id: string, dir: -1 | 1): string[] {
   const i = ids.indexOf(id)
   const j = i + dir
-  if (i < 0 || j < 0 || j >= ids.length) return ids
+  if (i < 0 || j < 0 || j >= ids.length) {
+    return ids
+  }
   const next = [...ids]
   ;[next[i], next[j]] = [next[j], next[i]]
   return next

@@ -1,8 +1,19 @@
-import { createServerFn } from '@tanstack/react-start'
-import type { Page, Section, Status, Task } from '#/lib/types'
-import { requireAccess } from './auth.server'
-import { db } from './db.server'
-import { arr, id, pageFields, partial, sectionFields, shape, slug, statusFields, taskFields, taskUpdateFields } from './validate'
+import { createServerFn } from "@tanstack/react-start"
+import type { Page, Section, Status, Task } from "#/lib/types"
+import { requireAccess } from "./auth.server"
+import { db } from "./db.server"
+import {
+  arr,
+  id,
+  pageFields,
+  partial,
+  sectionFields,
+  shape,
+  slug,
+  statusFields,
+  taskFields,
+  taskUpdateFields,
+} from "./validate"
 
 const bySlug = shape({ slug })
 const updates = <S extends Record<string, (v: unknown) => unknown>>(fields: S) =>
@@ -16,8 +27,10 @@ export const listPagesFn = createServerFn()
   .handler(async ({ data }) => {
     const s = await requireAccess(data.slug)
     const sql = await db()
-    return [...(await sql<Page[]>`
-      select id, title, subtitle, position from pages where session_slug = ${s}`)]
+    return [
+      ...(await sql<Page[]>`
+      select id, title, subtitle, position from pages where session_slug = ${s}`),
+    ]
   })
 
 export const listSectionsFn = createServerFn()
@@ -25,10 +38,12 @@ export const listSectionsFn = createServerFn()
   .handler(async ({ data }) => {
     const s = await requireAccess(data.slug)
     const sql = await db()
-    return [...(await sql<Section[]>`
+    return [
+      ...(await sql<Section[]>`
       select s.id, s.page_id, s.title, s.note, s.highlight, s.position
       from sections s join pages p on p.id = s.page_id
-      where p.session_slug = ${s}`)]
+      where p.session_slug = ${s}`),
+    ]
   })
 
 export const listTasksFn = createServerFn()
@@ -36,16 +51,18 @@ export const listTasksFn = createServerFn()
   .handler(async ({ data }) => {
     const s = await requireAccess(data.slug)
     const sql = await db()
-    return [...(await sql<Task[]>`
+    return [
+      ...(await sql<Task[]>`
       select t.id, t.section_id, s.page_id, t.text, t.done, t.status_id, t.note,
              to_json(t.created_at) #>> '{}' as created_at, t.position, t.board_position
       from tasks t join sections s on s.id = t.section_id join pages p on p.id = s.page_id
-      where p.session_slug = ${s}`)]
+      where p.session_slug = ${s}`),
+    ]
   })
 
 // ---- pages -------------------------------------------------------------
 
-export const insertPagesFn = createServerFn({ method: 'POST' })
+export const insertPagesFn = createServerFn({ method: "POST" })
   .validator(shape({ slug, items: arr(shape({ id, ...pageFields })) }))
   .handler(async ({ data }) => {
     const s = await requireAccess(data.slug)
@@ -53,7 +70,7 @@ export const insertPagesFn = createServerFn({ method: 'POST' })
     await sql`insert into pages ${sql(data.items.map((p) => ({ ...p, sessionSlug: s })))}`
   })
 
-export const updatePagesFn = createServerFn({ method: 'POST' })
+export const updatePagesFn = createServerFn({ method: "POST" })
   .validator(updates(pageFields))
   .handler(async ({ data }) => {
     const s = await requireAccess(data.slug)
@@ -65,7 +82,7 @@ export const updatePagesFn = createServerFn({ method: 'POST' })
     })
   })
 
-export const deletePagesFn = createServerFn({ method: 'POST' })
+export const deletePagesFn = createServerFn({ method: "POST" })
   .validator(removals)
   .handler(async ({ data }) => {
     const s = await requireAccess(data.slug)
@@ -75,7 +92,7 @@ export const deletePagesFn = createServerFn({ method: 'POST' })
 
 // ---- sections ----------------------------------------------------------
 
-export const insertSectionsFn = createServerFn({ method: 'POST' })
+export const insertSectionsFn = createServerFn({ method: "POST" })
   .validator(shape({ slug, items: arr(shape({ id, pageId: id, ...sectionFields })) }))
   .handler(async ({ data }) => {
     const s = await requireAccess(data.slug)
@@ -83,13 +100,15 @@ export const insertSectionsFn = createServerFn({ method: 'POST' })
     await sql.begin(async (tx) => {
       for (const x of data.items) {
         const [ok] = await tx`select 1 from pages where id = ${x.pageId} and session_slug = ${s}`
-        if (!ok) throw new Error('NOT_FOUND')
+        if (!ok) {
+          throw new Error("NOT_FOUND")
+        }
         await tx`insert into sections ${tx(x)}`
       }
     })
   })
 
-export const updateSectionsFn = createServerFn({ method: 'POST' })
+export const updateSectionsFn = createServerFn({ method: "POST" })
   .validator(updates(sectionFields))
   .handler(async ({ data }) => {
     const s = await requireAccess(data.slug)
@@ -102,7 +121,7 @@ export const updateSectionsFn = createServerFn({ method: 'POST' })
     })
   })
 
-export const deleteSectionsFn = createServerFn({ method: 'POST' })
+export const deleteSectionsFn = createServerFn({ method: "POST" })
   .validator(removals)
   .handler(async ({ data }) => {
     const s = await requireAccess(data.slug)
@@ -117,13 +136,15 @@ export const listStatusesFn = createServerFn()
   .handler(async ({ data }) => {
     const s = await requireAccess(data.slug)
     const sql = await db()
-    return [...(await sql<Status[]>`
+    return [
+      ...(await sql<Status[]>`
       select st.id, st.page_id, st.name, st.color, st.done, st.position
       from statuses st join pages p on p.id = st.page_id
-      where p.session_slug = ${s}`)]
+      where p.session_slug = ${s}`),
+    ]
   })
 
-export const insertStatusesFn = createServerFn({ method: 'POST' })
+export const insertStatusesFn = createServerFn({ method: "POST" })
   .validator(shape({ slug, items: arr(shape({ id, pageId: id, ...statusFields })) }))
   .handler(async ({ data }) => {
     const s = await requireAccess(data.slug)
@@ -131,13 +152,15 @@ export const insertStatusesFn = createServerFn({ method: 'POST' })
     await sql.begin(async (tx) => {
       for (const x of data.items) {
         const [ok] = await tx`select 1 from pages where id = ${x.pageId} and session_slug = ${s}`
-        if (!ok) throw new Error('NOT_FOUND')
+        if (!ok) {
+          throw new Error("NOT_FOUND")
+        }
         await tx`insert into statuses ${tx(x)}`
       }
     })
   })
 
-export const updateStatusesFn = createServerFn({ method: 'POST' })
+export const updateStatusesFn = createServerFn({ method: "POST" })
   .validator(updates(statusFields))
   .handler(async ({ data }) => {
     const s = await requireAccess(data.slug)
@@ -150,7 +173,7 @@ export const updateStatusesFn = createServerFn({ method: 'POST' })
     })
   })
 
-export const deleteStatusesFn = createServerFn({ method: 'POST' })
+export const deleteStatusesFn = createServerFn({ method: "POST" })
   .validator(removals)
   .handler(async ({ data }) => {
     const s = await requireAccess(data.slug)
@@ -160,7 +183,7 @@ export const deleteStatusesFn = createServerFn({ method: 'POST' })
 
 // ---- tasks -------------------------------------------------------------
 
-export const insertTasksFn = createServerFn({ method: 'POST' })
+export const insertTasksFn = createServerFn({ method: "POST" })
   .validator(shape({ slug, items: arr(shape({ id, sectionId: id, ...taskFields })) }))
   .handler(async ({ data }) => {
     const s = await requireAccess(data.slug)
@@ -173,13 +196,15 @@ export const insertTasksFn = createServerFn({ method: 'POST' })
           where sc.id = ${x.sectionId} and p.session_slug = ${s}
             and (${x.statusId}::text is null
                  or exists (select 1 from statuses st where st.id = ${x.statusId} and st.page_id = sc.page_id))`
-        if (!ok) throw new Error('NOT_FOUND')
+        if (!ok) {
+          throw new Error("NOT_FOUND")
+        }
         await tx`insert into tasks ${tx(x)}`
       }
     })
   })
 
-export const updateTasksFn = createServerFn({ method: 'POST' })
+export const updateTasksFn = createServerFn({ method: "POST" })
   .validator(updates(taskUpdateFields))
   .handler(async ({ data }) => {
     const s = await requireAccess(data.slug)
@@ -199,7 +224,7 @@ export const updateTasksFn = createServerFn({ method: 'POST' })
     })
   })
 
-export const deleteTasksFn = createServerFn({ method: 'POST' })
+export const deleteTasksFn = createServerFn({ method: "POST" })
   .validator(removals)
   .handler(async ({ data }) => {
     const s = await requireAccess(data.slug)
