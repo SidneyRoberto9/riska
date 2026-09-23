@@ -12,6 +12,7 @@
     "start": "node --env-file-if-exists=.env .output/server/index.mjs",
     "typecheck": "tsc --noEmit",
     "test": "node --test src/lib/*.test.ts",
+    "lint": "biome check && node scripts/check-conventions.ts",
     "format": "biome check --write"
   },
   "dependencies": {
