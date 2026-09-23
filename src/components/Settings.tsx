@@ -82,9 +82,14 @@ function ShareLink({ slug }: { slug: string }) {
     <button
       type="button"
       onClick={async () => {
-        await navigator.clipboard.writeText(`${location.origin}/s/${slug}`)
-        setCopied(true)
-        setTimeout(() => setCopied(false), 1500)
+        const url = `${location.origin}/s/${slug}`
+        try {
+          await navigator.clipboard.writeText(url)
+          setCopied(true)
+          setTimeout(() => setCopied(false), 1500)
+        } catch {
+          window.prompt('Copie o link:', url)
+        }
       }}
       className="w-full rounded-lg border border-line py-2 font-semibold hover:bg-accent-soft"
     >
