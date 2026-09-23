@@ -102,6 +102,7 @@ export function SortableBoard({
   const [active, setActive] = useState<{ kind: Kind; id: string; from: string } | null>(null)
   const [order, setOrder] = useState<{ items: Cols; columns: string[] } | null>(null)
   const settling = useRef(false)
+  const settleTimer = useRef<ReturnType<typeof setTimeout>>(undefined)
 
   // After a drop the final order stays on screen until the optimistic write reaches the live data (no snap-back)
   useEffect(() => {
@@ -164,7 +165,8 @@ export function SortableBoard({
     setOrder(final)
     settling.current = true
     commit()
-    setTimeout(() => {
+    clearTimeout(settleTimer.current)
+    settleTimer.current = setTimeout(() => {
       if (!settling.current) return
       settling.current = false
       setOrder(null)
@@ -173,6 +175,9 @@ export function SortableBoard({
 
   const onDragStart = ({ active }: DragStartEvent) => {
     const id = String(active.id)
+    // A new drag starts from the live data; a previous drop still settling must not clear this drag's order
+    settling.current = false
+    clearTimeout(settleTimer.current)
     setActive({ kind: kindOf(active), id, from: findColumn(live, id) ?? '' })
     setOrder({ items: live, columns: liveColumns })
   }
