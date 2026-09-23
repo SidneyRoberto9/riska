@@ -264,14 +264,9 @@ function AddCard({ status, sections }: { status: Status; sections: Section[] }) 
   const key = `checklist-board-section-${status.pageId}`
   const [open, setOpen] = useState(false)
   const [text, setText] = useState('')
-  const [sectionId, setSectionId] = useState(() => {
-    try {
-      return localStorage.getItem(key) ?? ''
-    } catch {
-      return ''
-    }
-  })
+  const [sectionId, setSectionId] = useState('')
   const input = useRef<HTMLInputElement>(null)
+  const refocus = useRef(false)
   const section = sections.find((s) => s.id === sectionId) ?? sections[0]
 
   const submit = (e: FormEvent) => {
@@ -283,11 +278,29 @@ function AddCard({ status, sections }: { status: Status; sections: Section[] }) 
     input.current?.focus()
   }
 
+  // Re-read on open: another column may have picked a section since
+  const show = () => {
+    try {
+      setSectionId(localStorage.getItem(key) ?? '')
+    } catch {}
+    setOpen(true)
+  }
+  const hide = () => {
+    refocus.current = true
+    setOpen(false)
+  }
+
   if (!open) {
     return (
       <button
         type="button"
-        onClick={() => setOpen(true)}
+        ref={(el) => {
+          if (el && refocus.current) {
+            refocus.current = false
+            el.focus()
+          }
+        }}
+        onClick={show}
         className="mx-2 mb-2 flex min-h-10 items-center gap-2 rounded-xl px-2 text-sm text-ink-soft hover:bg-accent-soft hover:text-accent"
       >
         <Plus size={16} aria-hidden />
@@ -299,7 +312,7 @@ function AddCard({ status, sections }: { status: Status; sections: Section[] }) 
     <form
       onSubmit={submit}
       onKeyDown={(e) => {
-        if (e.key === 'Escape') setOpen(false)
+        if (e.key === 'Escape') hide()
       }}
       className="mx-2 mb-2 space-y-2 rounded-xl border border-accent bg-surface p-2"
     >
@@ -340,7 +353,7 @@ function AddCard({ status, sections }: { status: Status; sections: Section[] }) 
         <button disabled={!text.trim()} className="ml-auto min-h-9 rounded-lg bg-accent px-3 text-sm font-semibold text-surface disabled:opacity-40">
           Adicionar
         </button>
-        <button type="button" onClick={() => setOpen(false)} aria-label="Fechar" className="grid size-9 place-items-center rounded-lg text-ink-soft hover:bg-accent-soft">
+        <button type="button" onClick={hide} aria-label="Fechar" className="grid size-9 place-items-center rounded-lg text-ink-soft hover:bg-accent-soft">
           <X size={16} aria-hidden />
         </button>
       </div>
