@@ -1,13 +1,15 @@
-import { ArrowDown, ArrowUp, CircleDot, GripVertical, Plus, StickyNote, Trash2 } from "lucide-react"
-import { type FormEvent, useState } from "react"
+import { ArrowDown, ArrowUp, CircleDot, GripVertical, StickyNote, Trash2 } from "lucide-react"
+import { useState } from "react"
 import { useActions } from "#/data/actions"
 import { chipHidden, statusOf } from "#/lib/status"
-import { LIMITS, type Section, type Status, type Task } from "#/lib/types"
+import { LIMITS, type Status, type Task } from "#/lib/types"
 import { useSortableItem } from "./dnd"
 import { InlineEdit } from "./InlineEdit"
-import { Menu, MenuItem } from "./Popover"
-import { StatusChip, StatusOptions, StatusPicker } from "./Status"
-import { VoiceButton } from "./VoiceButton"
+import { Menu } from "./Menu"
+import { MenuItem } from "./MenuItem"
+import { StatusChip } from "./StatusChip"
+import { StatusOptions } from "./StatusOptions"
+import { StatusPicker } from "./StatusPicker"
 
 export function TaskRow({ task, siblings, statuses }: { task: Task; siblings: Task[]; statuses: Status[] }) {
   const { setNodeRef, setActivatorNodeRef, attributes, listeners, style, isDragging } = useSortableItem(
@@ -135,34 +137,5 @@ export function TaskRow({ task, siblings, statuses }: { task: Task; siblings: Ta
         }
       </Menu>
     </div>
-  )
-}
-
-export function NewTaskInput({ section }: { section: Section }) {
-  const a = useActions()
-  const [text, setText] = useState("")
-  const submit = (e: FormEvent) => {
-    e.preventDefault()
-    const v = text.trim()
-    if (!v) {
-      return
-    }
-    a.addTask(section, v)
-    setText("")
-  }
-  return (
-    <form onSubmit={submit} className="flex items-center gap-1.5 border-t border-line py-1.5 pl-1">
-      <Plus size={19} aria-hidden className="shrink-0 text-ink-soft" />
-      <input
-        value={text}
-        onChange={(e) => setText(e.target.value)}
-        maxLength={LIMITS.task}
-        placeholder="Nova tarefa…"
-        autoComplete="off"
-        aria-label="Nova tarefa"
-        className="min-w-0 flex-1 rounded-md bg-transparent px-3 py-1.5 text-[0.92rem] placeholder:text-ink-soft"
-      />
-      <VoiceButton value={text} onChange={setText} />
-    </form>
   )
 }

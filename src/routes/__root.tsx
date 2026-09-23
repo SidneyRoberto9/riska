@@ -1,7 +1,7 @@
 import type { QueryClient } from "@tanstack/react-query"
 import { createRootRouteWithContext, HeadContent, Outlet, Scripts } from "@tanstack/react-router"
 import type { ReactNode } from "react"
-import { ToastProvider } from "#/components/toast"
+import { ToastProvider } from "#/components/ToastProvider"
 import { localThemeScript } from "#/data/theme"
 import { themeFn } from "#/server/session"
 import appCss from "../styles.css?url"

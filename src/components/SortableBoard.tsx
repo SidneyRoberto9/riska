@@ -13,46 +13,19 @@ import {
   MouseSensor,
   pointerWithin,
   TouchSensor,
-  useDroppable,
   useSensor,
   useSensors,
 } from "@dnd-kit/core"
-import {
-  arrayMove,
-  horizontalListSortingStrategy,
-  SortableContext,
-  sortableKeyboardCoordinates,
-  useSortable,
-  verticalListSortingStrategy,
-} from "@dnd-kit/sortable"
-import { CSS } from "@dnd-kit/utilities"
-import {
-  createContext,
-  type ReactNode,
-  type SyntheticEvent,
-  useContext,
-  useEffect,
-  useId,
-  useRef,
-  useState,
-} from "react"
+import { arrayMove, sortableKeyboardCoordinates } from "@dnd-kit/sortable"
+import { type ReactNode, useEffect, useId, useRef, useState } from "react"
+import { type Cols, Ctx, type Data, type Kind, markDrop } from "./dnd"
 
-export type Kind = "item" | "column"
-type Cols = Record<string, string[]>
-type Data = { kind: Kind | "drop"; column?: string }
 type WithData = { id: string | number; data: { current?: unknown } }
 
-const Ctx = createContext<{ items: Cols; columns: string[]; axis: "x" | "y"; dragging: boolean }>({
-  items: {},
-  columns: [],
-  axis: "y",
-  dragging: false,
-})
-const ColumnCtx = createContext("")
-
-let lastDrop = 0
 const dataOf = (x: WithData | null | undefined) => x?.data.current as Data | undefined
+
 const findColumn = (cols: Cols, id: string) => Object.keys(cols).find((k) => cols[k].includes(id))
+
 const cap = (s: string) => s.charAt(0).toUpperCase() + s.slice(1)
 
 // Columns only collide with columns; items with items or a column's empty area. Pointer first (mouse/touch),
@@ -178,7 +151,7 @@ export function SortableBoard({
   }
 
   const reset = () => {
-    lastDrop = performance.now()
+    markDrop()
     setActive(null)
   }
   // Show the final order, write it optimistically, then drop local state once the live data catches up
@@ -309,91 +282,5 @@ export function SortableBoard({
         )}
       </DragOverlay>
     </DndContext>
-  )
-}
-
-export function SortableColumns({ children }: { children: (ids: string[]) => ReactNode }) {
-  const { columns, axis } = useContext(Ctx)
-  return (
-    <SortableContext
-      items={columns}
-      strategy={axis === "x" ? horizontalListSortingStrategy : verticalListSortingStrategy}
-    >
-      {children(columns)}
-    </SortableContext>
-  )
-}
-
-export const useColumnItems = (id: string) => useContext(Ctx).items[id] ?? []
-
-// A column's items plus a droppable area (so empty columns accept drops)
-export function ColumnItems({
-  id,
-  className,
-  children,
-}: {
-  id: string
-  className?: string
-  children: (ids: string[]) => ReactNode
-}) {
-  const ids = useColumnItems(id)
-  const { setNodeRef } = useDroppable({ id: `drop:${id}`, data: { kind: "drop", column: id } satisfies Data })
-  return (
-    <ColumnCtx.Provider value={id}>
-      <SortableContext id={id} items={ids} strategy={verticalListSortingStrategy}>
-        <div ref={setNodeRef} className={className}>
-          {children(ids)}
-        </div>
-      </SortableContext>
-    </ColumnCtx.Provider>
-  )
-}
-
-const withStyle = (s: ReturnType<typeof useSortable>) => ({
-  ...s,
-  style: { transform: CSS.Translate.toString(s.transform), transition: s.transition },
-})
-
-export function useSortableItem(id: string, roleDescription = "item arrastável") {
-  const column = useContext(ColumnCtx)
-  return withStyle(useSortable({ id, data: { kind: "item", column } satisfies Data, attributes: { roleDescription } }))
-}
-
-export function useSortableColumn(id: string) {
-  return withStyle(
-    useSortable({ id, data: { kind: "column" } satisfies Data, attributes: { roleDescription: "coluna arrastável" } })
-  )
-}
-
-type Listeners = ReturnType<typeof useSortable>["listeners"]
-
-// Pointer drags from anywhere in the element except its own controls (inputs and [data-no-drag])
-export function dragFrom(listeners: Listeners) {
-  const out: Record<string, (e: SyntheticEvent) => void> = {}
-  for (const [name, fn] of Object.entries(listeners ?? {})) {
-    out[name] = (e) => {
-      if (name !== "onKeyDown" && (e.target as Element).closest("input, textarea, select, [data-no-drag]")) {
-        return
-      }
-      ;(fn as (e: SyntheticEvent) => void)(e)
-    }
-  }
-  return out
-}
-
-// True while dragging and right after a drop: the click that ends a mouse drag (or the Space that lifts a card)
-// must not also "click" what was dragged
-export function useClickGuard() {
-  const { dragging } = useContext(Ctx)
-  return () => dragging || performance.now() - lastDrop < 250
-}
-
-export function DragPreview({ children, strong = false }: { children: ReactNode; strong?: boolean }) {
-  return (
-    <div
-      className={`rounded-xl border border-line bg-surface px-3 py-2 text-[0.92rem] ${strong ? "font-display font-bold" : ""}`}
-    >
-      {children}
-    </div>
   )
 }

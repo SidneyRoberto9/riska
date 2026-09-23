@@ -4,7 +4,8 @@ import { useActions } from "#/data/actions"
 import { statusOf } from "#/lib/status"
 import { LIMITS, type Section, type Status, type Task } from "#/lib/types"
 import { InlineEdit } from "./InlineEdit"
-import { StatusChip, StatusPicker } from "./Status"
+import { StatusChip } from "./StatusChip"
+import { StatusPicker } from "./StatusPicker"
 import { VoiceButton } from "./VoiceButton"
 
 const dateFmt = new Intl.DateTimeFormat("pt-BR", { dateStyle: "medium", timeStyle: "short" })

@@ -24,23 +24,3 @@ export function PageLink({
     </Link>
   )
 }
-
-export function PagesLink({
-  source,
-  className,
-  children,
-}: {
-  source: Source
-  className?: string
-  children: ReactNode
-}) {
-  return source.slug ? (
-    <Link to="/s/$slug" params={{ slug: source.slug }} className={className}>
-      {children}
-    </Link>
-  ) : (
-    <Link to="/local" className={className}>
-      {children}
-    </Link>
-  )
-}

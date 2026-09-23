@@ -1,32 +1,9 @@
-import { Check, Plus } from "lucide-react"
-import { type ComponentProps, type FormEvent, type ReactNode, useState } from "react"
-import { useActions } from "#/data/actions"
-import { statusOf } from "#/lib/status"
-import { LIMITS, STATUS_COLORS, type Status, type Task } from "#/lib/types"
-import { Popover, type TriggerProps } from "./Popover"
+import { Check } from "lucide-react"
+import { type FormEvent, useState } from "react"
+import { tint } from "#/lib/status"
+import { LIMITS, STATUS_COLORS, type StatusDraft } from "#/lib/types"
 
 const COLOR_NAMES = ["Vermelho", "Laranja", "Âmbar", "Verde", "Azul", "Roxo", "Rosa", "Cinza"]
-
-// Tinted from the status colour against the current surface/ink, so it works in light and dark
-export const tint = (color: string) => ({
-  background: `color-mix(in oklab, ${color} 16%, var(--surface))`,
-  color: `color-mix(in oklab, ${color} 80%, var(--ink))`,
-})
-
-export type StatusDraft = Pick<Status, "name" | "color" | "done">
-
-export function StatusChip({ status, className = "", ...props }: { status: Status } & ComponentProps<"button">) {
-  return (
-    <button
-      type="button"
-      {...props}
-      style={tint(status.color)}
-      className={`inline-block rounded-md px-1.5 py-px align-[1px] text-[0.68rem] font-bold tracking-[.03em] ${className}`}
-    >
-      {status.name}
-    </button>
-  )
-}
 
 export function StatusEditor({
   initial,
@@ -115,70 +92,5 @@ export function StatusEditor({
         </div>
       </div>
     </form>
-  )
-}
-
-// The page's statuses as a single-choice list, plus "Novo status" (creates it and moves the task there)
-export function StatusOptions({ task, statuses, onDone }: { task: Task; statuses: Status[]; onDone: () => void }) {
-  const a = useActions()
-  const [creating, setCreating] = useState(false)
-  const current = statusOf(task, statuses)
-
-  if (creating) {
-    return (
-      <StatusEditor
-        onSave={(v) => {
-          const id = a.addStatus(task.pageId, v)
-          a.setTaskStatus(task, { ...v, id, pageId: task.pageId, position: 0 })
-          onDone()
-        }}
-      />
-    )
-  }
-  return (
-    <fieldset aria-label="Status da tarefa" className="min-w-0">
-      {statuses.map((s) => (
-        <button
-          key={s.id}
-          type="button"
-          aria-pressed={s.id === current?.id}
-          onClick={() => {
-            if (s.id !== current?.id) {
-              a.setTaskStatus(task, s)
-            }
-            onDone()
-          }}
-          className="flex min-h-10 w-full items-center gap-2.5 rounded-lg px-3 text-left hover:bg-accent-soft"
-        >
-          <span aria-hidden className="size-2.5 shrink-0 rounded-full" style={{ background: s.color }} />
-          <span className="flex-1">{s.name}</span>
-          {s.id === current?.id && <Check size={16} aria-hidden className="text-accent" />}
-        </button>
-      ))}
-      <button
-        type="button"
-        onClick={() => setCreating(true)}
-        className="flex min-h-10 w-full items-center gap-2.5 rounded-lg px-3 text-left text-ink-soft hover:bg-accent-soft hover:text-accent"
-      >
-        <Plus size={16} aria-hidden />
-        Novo status
-      </button>
-    </fieldset>
-  )
-}
-
-export function StatusPicker({
-  task,
-  statuses,
-  trigger,
-}: {
-  task: Task
-  statuses: Status[]
-  trigger: (p: TriggerProps) => ReactNode
-}) {
-  return (
-    <Popover className="min-w-52 p-1" trigger={trigger}>
-      {(close) => <StatusOptions task={task} statuses={statuses} onDone={close} />}
-    </Popover>
   )
 }

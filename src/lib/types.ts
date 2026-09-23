@@ -22,6 +22,7 @@ export const LIMITS = { title: 200, note: 500, task: 1000, taskNote: 2000, statu
 export type Page = { id: string; title: string; subtitle: string; position: number }
 export type Section = { id: string; pageId: string; title: string; note: string; highlight: boolean; position: number }
 export type Status = { id: string; pageId: string; name: string; color: string; done: boolean; position: number }
+export type StatusDraft = Pick<Status, "name" | "color" | "done">
 // pageId is derived server-side from the section (not a column); kept on the client for cheap per-page filtering.
 // statusId null (or pointing at a deleted status) means the page's first status. `done` is always written with statusId.
 // position orders the task inside its section (Lista); boardPosition orders it inside its column (Quadro).

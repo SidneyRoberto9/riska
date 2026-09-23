@@ -32,3 +32,9 @@ export function neighbour(statuses: Status[], id: string): Status | undefined {
   }
   return statuses[i - 1] ?? statuses[i + 1]
 }
+
+// Tinted from the status colour against the current surface/ink, so it works in light and dark
+export const tint = (color: string) => ({
+  background: `color-mix(in oklab, ${color} 16%, var(--surface))`,
+  color: `color-mix(in oklab, ${color} 80%, var(--ink))`,
+})

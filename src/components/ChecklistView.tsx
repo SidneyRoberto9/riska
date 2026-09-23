@@ -1,17 +1,20 @@
 import { eq, useLiveQuery } from "@tanstack/react-db"
 import { useRouter } from "@tanstack/react-router"
-import { ChevronLeft, Plus } from "lucide-react"
-import { type FormEvent, useEffect, useRef, useState } from "react"
+import { ChevronLeft } from "lucide-react"
+import { useEffect, useRef } from "react"
 import { useActions } from "#/data/actions"
 import { useSetPageSearch } from "#/data/page-search"
 import { useSource } from "#/data/source-context"
 import { LIMITS, type Task } from "#/lib/types"
 import { Board } from "./Board"
-import { DragPreview, SortableBoard, SortableColumns } from "./dnd"
+import { DragPreview } from "./DragPreview"
 import { InlineEdit } from "./InlineEdit"
-import { PagesLink } from "./links"
+import { NewSection } from "./NewSection"
+import { PagesLink } from "./PagesLink"
 import { ProgressBar } from "./ProgressBar"
 import { SectionCard } from "./SectionCard"
+import { SortableBoard } from "./SortableBoard"
+import { SortableColumns } from "./SortableColumns"
 import { TaskDialog } from "./TaskDialog"
 import { ViewToggle } from "./ViewToggle"
 
@@ -217,38 +220,5 @@ export function ChecklistView({ pageId, view, taskId }: { pageId: string; view?:
         />
       )}
     </>
-  )
-}
-
-function NewSection({ onAdd }: { onAdd: (title: string) => void }) {
-  const [title, setTitle] = useState("")
-  const submit = (e: FormEvent) => {
-    e.preventDefault()
-    const v = title.trim()
-    if (!v) {
-      return
-    }
-    onAdd(v)
-    setTitle("")
-  }
-  return (
-    <form
-      onSubmit={submit}
-      className="mb-3.5 flex items-center gap-2 rounded-2xl border border-dashed border-line p-2 pl-4 focus-within:border-accent"
-    >
-      <Plus size={18} aria-hidden className="shrink-0 text-ink-soft" />
-      <input
-        value={title}
-        onChange={(e) => setTitle(e.target.value)}
-        maxLength={LIMITS.title}
-        placeholder="Nova seção…"
-        aria-label="Nova seção"
-        autoComplete="off"
-        className="min-w-0 flex-1 rounded-lg bg-transparent py-2 font-display font-bold outline-none placeholder:text-ink-soft"
-      />
-      {title.trim() && (
-        <button className="min-h-10 rounded-xl bg-accent px-4 font-semibold text-surface">Criar seção</button>
-      )}
-    </form>
   )
 }

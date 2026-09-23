@@ -2,10 +2,13 @@ import { ArrowDown, ArrowUp, GripVertical, Highlighter, StickyNote, Trash2 } fro
 import { useState } from "react"
 import { useActions } from "#/data/actions"
 import { LIMITS, type Section, type Status, type Task } from "#/lib/types"
-import { ColumnItems, useSortableColumn } from "./dnd"
+import { ColumnItems } from "./ColumnItems"
+import { useSortableColumn } from "./dnd"
 import { InlineEdit } from "./InlineEdit"
-import { Menu, MenuItem } from "./Popover"
-import { NewTaskInput, TaskRow } from "./TaskRow"
+import { Menu } from "./Menu"
+import { MenuItem } from "./MenuItem"
+import { NewTaskInput } from "./NewTaskInput"
+import { TaskRow } from "./TaskRow"
 
 export function SectionCard({
   section,

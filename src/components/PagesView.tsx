@@ -1,15 +1,14 @@
 import { useLiveQuery } from "@tanstack/react-db"
 import { useNavigate } from "@tanstack/react-router"
-import { ArrowDown, ArrowUp, GripVertical, Trash2 } from "lucide-react"
 import { type FormEvent, useState } from "react"
 import { useActions } from "#/data/actions"
 import { useSource } from "#/data/source-context"
-import { LIMITS, type Page } from "#/lib/types"
-import { ColumnItems, DragPreview, SortableBoard, useSortableItem } from "./dnd"
-import { PageLink } from "./links"
-import { Menu, MenuItem } from "./Popover"
-import { ProgressBar } from "./ProgressBar"
-import { SettingsButton } from "./Settings"
+import { LIMITS } from "#/lib/types"
+import { ColumnItems } from "./ColumnItems"
+import { DragPreview } from "./DragPreview"
+import { PageCard } from "./PageCard"
+import { SettingsButton } from "./SettingsButton"
+import { SortableBoard } from "./SortableBoard"
 
 export function PagesView() {
   const source = useSource()
@@ -91,75 +90,5 @@ export function PagesView() {
         </form>
       </main>
     </>
-  )
-}
-
-function PageCard({ page: p, stats: s, pages }: { page: Page; stats: { done: number; total: number }; pages: Page[] }) {
-  const source = useSource()
-  const a = useActions()
-  const { setNodeRef, setActivatorNodeRef, attributes, listeners, style, isDragging } = useSortableItem(
-    p.id,
-    "página arrastável"
-  )
-  return (
-    <div
-      ref={setNodeRef}
-      style={style}
-      className={`group flex items-start gap-2 rounded-2xl border border-line bg-surface p-4 pl-2 ${isDragging ? "drag-ghost" : ""}`}
-    >
-      <button
-        type="button"
-        ref={setActivatorNodeRef}
-        {...attributes}
-        {...listeners}
-        aria-label={`Arrastar página: ${p.title}`}
-        className="drag-handle grid h-7 w-6 shrink-0 cursor-grab touch-none place-items-center rounded-md text-ink-soft"
-      >
-        <GripVertical size={16} aria-hidden />
-      </button>
-      <PageLink source={source} pageId={p.id} className="min-w-0 flex-1">
-        <h2 className="m-0 text-[1.02rem] font-bold">{p.title}</h2>
-        {p.subtitle && <p className="m-0 mt-0.5 truncate text-[0.82rem] text-ink-soft">{p.subtitle}</p>}
-        <div className="mt-3">
-          <ProgressBar small done={s.done} total={s.total} />
-        </div>
-      </PageLink>
-      <Menu label="Ações da página">
-        {(close) => (
-          <>
-            <MenuItem
-              icon={ArrowUp}
-              onClick={() => {
-                a.movePage(pages, p.id, -1)
-                close()
-              }}
-            >
-              Subir
-            </MenuItem>
-            <MenuItem
-              icon={ArrowDown}
-              onClick={() => {
-                a.movePage(pages, p.id, 1)
-                close()
-              }}
-            >
-              Descer
-            </MenuItem>
-            <MenuItem
-              icon={Trash2}
-              danger
-              onClick={() => {
-                close()
-                if (confirm(`Deletar a página “${p.title}”?`)) {
-                  a.deletePage(p.id)
-                }
-              }}
-            >
-              Deletar
-            </MenuItem>
-          </>
-        )}
-      </Menu>
-    </div>
   )
 }

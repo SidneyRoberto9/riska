@@ -1,4 +1,3 @@
-import { Ellipsis, type LucideIcon } from "lucide-react"
 import { type ReactNode, type RefObject, useId, useLayoutEffect, useRef, useState } from "react"
 
 export type TriggerProps = {
@@ -66,62 +65,5 @@ export function Popover({
         {open && children(() => pop.current?.hidePopover())}
       </div>
     </>
-  )
-}
-
-export function Menu({
-  label,
-  children,
-  onClose,
-  quiet = false,
-}: {
-  label: string
-  children: (close: () => void) => ReactNode
-  onClose?: () => void
-  /** Dim until the enclosing `.group` is hovered (pointer devices only) */
-  quiet?: boolean
-}) {
-  return (
-    <Popover
-      className="min-w-48 p-1"
-      onClose={onClose}
-      trigger={(p) => (
-        <button
-          {...p}
-          aria-label={label}
-          className={`-my-1.5 grid size-10 shrink-0 place-items-center rounded-lg text-ink-soft hover:bg-accent-soft hover:text-accent ${quiet ? "row-action" : ""}`}
-        >
-          <Ellipsis size={18} aria-hidden />
-        </button>
-      )}
-    >
-      {children}
-    </Popover>
-  )
-}
-
-export function MenuItem({
-  onClick,
-  children,
-  icon: Icon,
-  danger,
-  disabled,
-}: {
-  onClick: () => void
-  children: ReactNode
-  icon: LucideIcon
-  danger?: boolean
-  disabled?: boolean
-}) {
-  return (
-    <button
-      type="button"
-      onClick={onClick}
-      disabled={disabled}
-      className={`flex min-h-10 w-full items-center gap-2.5 rounded-lg px-3 text-left hover:bg-accent-soft disabled:pointer-events-none disabled:opacity-40 ${danger ? "text-warn hover:bg-warn-soft" : ""}`}
-    >
-      <Icon size={16} aria-hidden className={danger ? "" : "text-ink-soft"} />
-      {children}
-    </button>
   )
 }

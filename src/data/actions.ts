@@ -1,38 +1,22 @@
 import type { Collection, Transaction } from "@tanstack/react-db"
 import { useRouter } from "@tanstack/react-router"
-import { useToast } from "#/components/toast"
+import { useToast } from "#/components/ToastProvider"
 import { newId } from "#/lib/id"
-import { nextPosition, renumber, shift } from "#/lib/order"
-import { doneChanges, neighbour, statusChanges, statusOf } from "#/lib/status"
+import { nextPosition, shift } from "#/lib/order"
+import { doneChanges, statusChanges, statusOf } from "#/lib/status"
 import type { Page, Section, Settings, Status, Task } from "#/lib/types"
 import { DEFAULT_SETTINGS, DEFAULT_STATUSES } from "#/lib/types"
+import { reorderTx } from "./reorder"
+import type { Source } from "./source"
 import { useSource } from "./source-context"
+import { statusActions } from "./statusActions"
 
-type Row = { id: string }
-type StatusDraft = Pick<Status, "name" | "color" | "done">
-
-// Writes 1..n into `field` for `ids` (only rows that change) plus per-row extra changes:
-// one optimistic transaction = one server call, so a drop never half-applies
-function reorderTx<T extends Row>(
-  c: Collection<T, string>,
-  ids: string[],
-  field: keyof T & string,
-  extra: Record<string, Partial<T>> = {}
-) {
-  const pos = renumber(ids, new Map(ids.map((id) => [id, Number(c.get(id)?.[field])])))
-  const keys = [...new Set([...pos.keys(), ...Object.keys(extra)])].filter((id) => c.has(id))
-  if (!keys.length) {
-    return null
-  }
-  return c.update(keys, (drafts) => {
-    drafts.forEach((d, i) => {
-      const p = pos.get(keys[i])
-      if (p !== undefined) {
-        Object.assign(d, { [field]: p })
-      }
-      Object.assign(d, extra[keys[i]])
-    })
-  })
+type Run = (mutate: () => Transaction | null) => void
+export type ActionContext = {
+  source: Source
+  run: Run
+  all: <T extends object>(c: Collection<T, string>) => T[]
+  pageStatuses: (pageId: string) => Status[]
 }
 
 export function useActions() {
@@ -41,7 +25,7 @@ export function useActions() {
   const router = useRouter()
 
   // Every mutation is optimistic; on failure TanStack DB rolls back and we offer a retry
-  const run = (mutate: () => Transaction | null) => {
+  const run: Run = (mutate) => {
     mutate()?.isPersisted.promise.catch((err: Error) => {
       if (err?.message === "UNAUTHORIZED") {
         router.invalidate()
@@ -76,37 +60,11 @@ export function useActions() {
     const extra = moved ? { boardPosition: boardEnd(task.pageId) } : {}
     run(() => tasks.update(task.id, (d) => void Object.assign(d, changes, extra)))
   }
-  const tasksInColumn = (status: Status) => {
-    const list = pageStatuses(status.pageId)
-    return all(tasks).filter((t) => t.pageId === status.pageId && statusOf(t, list)?.id === status.id)
-  }
 
-  // A null (or deleted) statusId follows whichever column is first; before another column becomes first,
-  // those tasks are pinned to the current first one so reordering columns never moves cards
-  const reorderStatuses = (ids: string[]) => {
-    const pageId = statuses.get(ids[0])?.pageId
-    const list = pageId ? pageStatuses(pageId) : []
-    const first = list[0]
-    if (first && ids[0] !== first.id) {
-      const live = new Set(list.map((s) => s.id))
-      const loose = all(tasks)
-        .filter((t) => t.pageId === pageId && !live.has(t.statusId ?? ""))
-        .map((t) => t.id)
-      // Separate transaction: tasks and statuses are different collections, persisted by different server functions
-      if (loose.length) {
-        run(() =>
-          tasks.update(loose, (ds) => {
-            for (const d of ds) {
-              d.statusId = first.id
-            }
-          })
-        )
-      }
-    }
-    run(() => reorderTx(statuses, ids, "position"))
-  }
+  const context: ActionContext = { source, run, all, pageStatuses }
 
   return {
+    ...statusActions(context),
     addPage(title: string) {
       const id = newId()
       run(() => pages.insert({ id, title, subtitle: "", position: nextPosition(all(pages)) }))
@@ -189,54 +147,6 @@ export function useActions() {
     reorderSections(ids: string[]) {
       run(() => reorderTx(sections, ids, "position"))
     },
-
-    addStatus(pageId: string, draft: StatusDraft) {
-      const id = newId()
-      run(() => statuses.insert({ ...draft, id, pageId, position: nextPosition(pageStatuses(pageId)) }))
-      return id
-    },
-    // Flipping a column's "done" flag re-syncs the checkbox of every task in it
-    updateStatus(status: Status, changes: Partial<StatusDraft>) {
-      run(() => statuses.update(status.id, (d) => void Object.assign(d, changes)))
-      const done = changes.done
-      if (done === undefined || done === status.done) {
-        return
-      }
-      const ids = tasksInColumn(status)
-        .filter((t) => t.done !== done)
-        .map((t) => t.id)
-      if (ids.length) {
-        run(() =>
-          tasks.update(ids, (ds) => {
-            for (const d of ds) {
-              d.done = done
-            }
-          })
-        )
-      }
-    },
-    // Tasks move to the neighbour column first, so nothing ends up orphaned; the last column can't be deleted
-    deleteStatus(status: Status) {
-      const target = neighbour(pageStatuses(status.pageId), status.id)
-      if (!target) {
-        return
-      }
-      const ids = tasksInColumn(status).map((t) => t.id)
-      if (ids.length) {
-        run(() => tasks.update(ids, (ds) => ds.forEach((d) => void Object.assign(d, statusChanges(target)))))
-      }
-      run(() => statuses.delete(status.id))
-    },
-    moveStatus(sorted: Status[], id: string, dir: -1 | 1) {
-      reorderStatuses(
-        shift(
-          sorted.map((s) => s.id),
-          id,
-          dir
-        )
-      )
-    },
-    reorderStatuses,
 
     addTask(section: Section, text: string, status?: Status) {
       const siblings = all(tasks).filter((t) => t.sectionId === section.id)
