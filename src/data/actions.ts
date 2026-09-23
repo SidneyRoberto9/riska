@@ -58,7 +58,7 @@ export function useActions() {
   // Server mode: a status insert just fired for this render still in flight; a task update naming it
   // as statusId fails the server's FK-style check (0 rows) if it lands first, and the next refetch then
   // silently reverts the optimistic move. Mirrors addPage's wait for the same insert-then-reference race.
-  const pendingStatus = new Map<string, Promise<void>>()
+  const pendingStatus = new Map<string, Promise<unknown>>()
   const setTaskState = (task: Task, changes: Partial<Task>) => {
     if (!tasks.has(task.id)) return
     // Compare against the resolved column, not the raw field: a null statusId that already resolves
@@ -67,7 +67,9 @@ export function useActions() {
     const extra = moved ? { boardPosition: boardEnd(task.pageId) } : {}
     const write = () => run(() => tasks.update(task.id, (d) => void Object.assign(d, changes, extra)))
     const pending = changes.statusId ? pendingStatus.get(changes.statusId) : undefined
-    if (pending) pending.then(write)
+    // If the status insert itself failed, skip the write: run() already toasts that failure with a retry,
+    // and writing anyway would reference a status row that was never created
+    if (pending) pending.then(write, () => {})
     else write()
   }
   const tasksInColumn = (status: Status) => {
@@ -128,7 +130,7 @@ export function useActions() {
     addStatus(pageId: string, draft: StatusDraft) {
       const id = newId()
       const tx = run(() => statuses.insert({ ...draft, id, pageId, position: nextPosition(pageStatuses(pageId)) }))
-      if (source.slug && tx) pendingStatus.set(id, tx.isPersisted.promise.then(() => {}, () => {}))
+      if (source.slug && tx) pendingStatus.set(id, tx.isPersisted.promise)
       return id
     },
     // Flipping a column's "done" flag re-syncs the checkbox of every task in it
