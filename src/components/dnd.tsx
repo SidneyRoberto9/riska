@@ -111,6 +111,7 @@ export function SortableBoard({
     settling.current = false
     setOrder(null)
   }, [liveKey])
+  useEffect(() => () => clearTimeout(settleTimer.current), [])
 
   const sensors = useSensors(
     useSensor(MouseSensor, { activationConstraint: { distance: 5 } }),
