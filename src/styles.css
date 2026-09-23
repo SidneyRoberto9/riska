@@ -130,6 +130,28 @@
       opacity: 1;
     }
   }
+  /* Drag-and-drop: faded placeholder where the item will land, lifted copy under the pointer */
+  .drag-ghost {
+    opacity: 0.4;
+  }
+  .drag-lift {
+    rotate: 1.5deg;
+    scale: 1.03;
+    cursor: grabbing;
+    border-radius: 14px;
+    box-shadow: 0 14px 34px rgb(0 0 0 / 0.22);
+  }
+  /* Handles are always visible on touch; on pointer devices they appear with the row */
+  @media (hover: hover) {
+    .drag-handle {
+      opacity: 0;
+      transition: opacity 0.15s ease;
+    }
+    .group:hover .drag-handle,
+    .drag-handle:focus-visible {
+      opacity: 1;
+    }
+  }
 }
 
 @media (prefers-reduced-motion: reduce) {
@@ -137,6 +159,10 @@
     animation-duration: 0.01ms !important;
     animation-iteration-count: 1 !important;
     transition-duration: 0.01ms !important;
+  }
+  .drag-lift {
+    rotate: none;
+    scale: none;
   }
 }
 
