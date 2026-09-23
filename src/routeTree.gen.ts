@@ -10,33 +10,102 @@
 
 import { Route as rootRouteImport } from './routes/__root'
 import { Route as IndexRouteImport } from './routes/index'
+import { Route as LocalRouteImport } from './routes/local'
+import { Route as LocalIndexRouteImport } from './routes/local.index'
+import { Route as SSlugRouteImport } from './routes/s.$slug'
+import { Route as LocalPPageIdRouteImport } from './routes/local.p.$pageId'
+import { Route as SSlugIndexRouteImport } from './routes/s.$slug.index'
+import { Route as SSlugPPageIdRouteImport } from './routes/s.$slug.p.$pageId'
 
 const IndexRoute = IndexRouteImport.update({
   id: '/',
   path: '/',
   getParentRoute: () => rootRouteImport,
 } as any)
+const LocalRoute = LocalRouteImport.update({
+  id: '/local',
+  path: '/local',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const LocalIndexRoute = LocalIndexRouteImport.update({
+  id: '/',
+  path: '/',
+  getParentRoute: () => LocalRoute,
+} as any)
+const SSlugRoute = SSlugRouteImport.update({
+  id: '/s/$slug',
+  path: '/s/$slug',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const LocalPPageIdRoute = LocalPPageIdRouteImport.update({
+  id: '/p/$pageId',
+  path: '/p/$pageId',
+  getParentRoute: () => LocalRoute,
+} as any)
+const SSlugIndexRoute = SSlugIndexRouteImport.update({
+  id: '/',
+  path: '/',
+  getParentRoute: () => SSlugRoute,
+} as any)
+const SSlugPPageIdRoute = SSlugPPageIdRouteImport.update({
+  id: '/p/$pageId',
+  path: '/p/$pageId',
+  getParentRoute: () => SSlugRoute,
+} as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
+  '/local': typeof LocalRouteWithChildren
+  '/s/$slug': typeof SSlugRouteWithChildren
+  '/local/': typeof LocalIndexRoute
+  '/local/p/$pageId': typeof LocalPPageIdRoute
+  '/s/$slug/': typeof SSlugIndexRoute
+  '/s/$slug/p/$pageId': typeof SSlugPPageIdRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
+  '/local': typeof LocalIndexRoute
+  '/local/p/$pageId': typeof LocalPPageIdRoute
+  '/s/$slug': typeof SSlugIndexRoute
+  '/s/$slug/p/$pageId': typeof SSlugPPageIdRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
+  '/local': typeof LocalRouteWithChildren
+  '/s/$slug': typeof SSlugRouteWithChildren
+  '/local/': typeof LocalIndexRoute
+  '/local/p/$pageId': typeof LocalPPageIdRoute
+  '/s/$slug/': typeof SSlugIndexRoute
+  '/s/$slug/p/$pageId': typeof SSlugPPageIdRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
-  fullPaths: '/'
+  fullPaths:
+    | '/'
+    | '/local'
+    | '/s/$slug'
+    | '/local/'
+    | '/local/p/$pageId'
+    | '/s/$slug/'
+    | '/s/$slug/p/$pageId'
   fileRoutesByTo: FileRoutesByTo
-  to: '/'
-  id: '__root__' | '/'
+  to: '/' | '/local' | '/local/p/$pageId' | '/s/$slug' | '/s/$slug/p/$pageId'
+  id:
+    | '__root__'
+    | '/'
+    | '/local'
+    | '/s/$slug'
+    | '/local/'
+    | '/local/p/$pageId'
+    | '/s/$slug/'
+    | '/s/$slug/p/$pageId'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
+  LocalRoute: typeof LocalRouteWithChildren
+  SSlugRoute: typeof SSlugRouteWithChildren
 }
 
 declare module '@tanstack/react-router' {
@@ -48,11 +117,79 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof IndexRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/local': {
+      id: '/local'
+      path: '/local'
+      fullPath: '/local'
+      preLoaderRoute: typeof LocalRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/local/': {
+      id: '/local/'
+      path: '/'
+      fullPath: '/local/'
+      preLoaderRoute: typeof LocalIndexRouteImport
+      parentRoute: typeof LocalRoute
+    }
+    '/s/$slug': {
+      id: '/s/$slug'
+      path: '/s/$slug'
+      fullPath: '/s/$slug'
+      preLoaderRoute: typeof SSlugRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/local/p/$pageId': {
+      id: '/local/p/$pageId'
+      path: '/p/$pageId'
+      fullPath: '/local/p/$pageId'
+      preLoaderRoute: typeof LocalPPageIdRouteImport
+      parentRoute: typeof LocalRoute
+    }
+    '/s/$slug/': {
+      id: '/s/$slug/'
+      path: '/'
+      fullPath: '/s/$slug/'
+      preLoaderRoute: typeof SSlugIndexRouteImport
+      parentRoute: typeof SSlugRoute
+    }
+    '/s/$slug/p/$pageId': {
+      id: '/s/$slug/p/$pageId'
+      path: '/p/$pageId'
+      fullPath: '/s/$slug/p/$pageId'
+      preLoaderRoute: typeof SSlugPPageIdRouteImport
+      parentRoute: typeof SSlugRoute
+    }
   }
 }
 
+interface LocalRouteChildren {
+  LocalIndexRoute: typeof LocalIndexRoute
+  LocalPPageIdRoute: typeof LocalPPageIdRoute
+}
+
+const LocalRouteChildren: LocalRouteChildren = {
+  LocalIndexRoute: LocalIndexRoute,
+  LocalPPageIdRoute: LocalPPageIdRoute,
+}
+
+const LocalRouteWithChildren = LocalRoute._addFileChildren(LocalRouteChildren)
+
+interface SSlugRouteChildren {
+  SSlugIndexRoute: typeof SSlugIndexRoute
+  SSlugPPageIdRoute: typeof SSlugPPageIdRoute
+}
+
+const SSlugRouteChildren: SSlugRouteChildren = {
+  SSlugIndexRoute: SSlugIndexRoute,
+  SSlugPPageIdRoute: SSlugPPageIdRoute,
+}
+
+const SSlugRouteWithChildren = SSlugRoute._addFileChildren(SSlugRouteChildren)
+
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
+  LocalRoute: LocalRouteWithChildren,
+  SSlugRoute: SSlugRouteWithChildren,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
