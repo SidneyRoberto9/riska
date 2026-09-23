@@ -27,6 +27,8 @@ function relative(iso: string) {
 export function TaskDialog({ task, statuses, section, onClose }: { task: Task; statuses: Status[]; section?: Section; onClose: () => void }) {
   const a = useActions()
   const ref = useRef<HTMLDialogElement>(null)
+  // Backdrop close needs press and release on the backdrop: a text selection dragged out of the dialog doesn't count
+  const downOnBackdrop = useRef(false)
   const titleId = useId()
   const noteId = useId()
   const [note, setNote] = useState(task.note)
@@ -51,8 +53,11 @@ export function TaskDialog({ task, statuses, section, onClose }: { task: Task; s
       ref={ref}
       aria-labelledby={titleId}
       onClose={onClose}
+      onPointerDown={(e) => {
+        downOnBackdrop.current = e.target === ref.current
+      }}
       onClick={(e) => {
-        if (e.target === ref.current) ref.current.close()
+        if (downOnBackdrop.current && e.target === ref.current) ref.current.close()
       }}
       className="task-dialog"
     >
