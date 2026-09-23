@@ -11,6 +11,9 @@ import { StatusEditor, StatusOptions } from './Status'
 import { VoiceButton } from './VoiceButton'
 
 const COLUMN_W = 'w-[min(85vw,300px)]'
+// Columns end above the viewport bottom (page header ≈ 11.75rem above, scrollbar gutter + footer ≈ 3.25rem below)
+// so the page itself doesn't scroll; cards scroll inside the column
+const COLUMN_MAX_H = 'max-h-[calc(100dvh-15rem)]'
 
 export function Board({
   pageId,
@@ -115,7 +118,7 @@ function Column({
       ref={setNodeRef}
       style={style}
       aria-label={`${status.name}, ${count} ${count === 1 ? 'tarefa' : 'tarefas'}`}
-      className={`flex ${COLUMN_W} shrink-0 snap-start flex-col rounded-2xl border border-line bg-surface/50 ${isDragging ? 'drag-ghost' : ''}`}
+      className={`flex ${COLUMN_W} ${COLUMN_MAX_H} shrink-0 snap-start flex-col rounded-2xl border border-line bg-surface/50 ${isDragging ? 'drag-ghost' : ''}`}
     >
       <header className="group flex items-center gap-1.5 px-2 pt-2 pb-1">
         <button
@@ -161,7 +164,7 @@ function Column({
           }
         </Menu>
       </header>
-      <ColumnItems id={status.id} className="flex min-h-16 flex-col gap-2 px-2 pb-2">
+      <ColumnItems id={status.id} className="flex min-h-16 flex-1 flex-col gap-2 overflow-y-auto overscroll-contain px-2 pb-2">
         {(ids) =>
           ids.map((id) => {
             const t = byId.get(id)

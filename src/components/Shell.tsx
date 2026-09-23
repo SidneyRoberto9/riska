@@ -6,7 +6,7 @@ export function Shell({ children }: { children: ReactNode }) {
   useApplyTheme()
   // The board uses the whole window; everything else keeps the reading width
   const { view } = useSearch({ strict: false }) as { view?: string }
-  return <div className={`mx-auto px-4 pb-12 ${view === 'quadro' ? 'max-w-none sm:px-6' : 'max-w-[720px]'}`}>{children}</div>
+  return <div className={`mx-auto px-4 ${view === 'quadro' ? 'max-w-none sm:px-6' : 'max-w-[720px] pb-12'}`}>{children}</div>
 }
 
 export function NotFound() {
