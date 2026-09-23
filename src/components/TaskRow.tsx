@@ -49,7 +49,7 @@ export function TaskRow({ task, siblings }: { task: Task; siblings: Task[] }) {
           </Popover>
         ))}
       </div>
-      <Menu label="Ações da tarefa">
+      <Menu label="Ações da tarefa" onClose={() => setAddingBadge(false)}>
         {(close) =>
           addingBadge ? (
             <BadgeEditor
