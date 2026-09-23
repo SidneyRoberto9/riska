@@ -26,7 +26,7 @@ import {
   verticalListSortingStrategy,
 } from '@dnd-kit/sortable'
 import { CSS } from '@dnd-kit/utilities'
-import { createContext, useContext, useEffect, useRef, useState, type ReactNode, type SyntheticEvent } from 'react'
+import { createContext, useContext, useEffect, useId, useRef, useState, type ReactNode, type SyntheticEvent } from 'react'
 
 export type Kind = 'item' | 'column'
 type Cols = Record<string, string[]>
@@ -103,6 +103,7 @@ export function SortableBoard({
   const [order, setOrder] = useState<{ items: Cols; columns: string[] } | null>(null)
   const settling = useRef(false)
   const settleTimer = useRef<ReturnType<typeof setTimeout>>(undefined)
+  const dndId = useId()
 
   // After a drop the final order stays on screen until the optimistic write reaches the live data (no snap-back)
   useEffect(() => {
@@ -234,6 +235,7 @@ export function SortableBoard({
 
   return (
     <DndContext
+      id={dndId}
       sensors={sensors}
       collisionDetection={collision}
       onDragStart={onDragStart}
