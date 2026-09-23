@@ -1,0 +1,142 @@
+@import "tailwindcss";
+
+@theme inline {
+  --color-ink: var(--ink);
+  --color-ink-soft: var(--ink-soft);
+  --color-line: var(--line);
+  --color-surface: var(--surface);
+  --color-ground: var(--ground);
+  --color-accent: var(--accent);
+  --color-accent-soft: var(--accent-soft);
+  --color-done: var(--done);
+  --color-done-soft: var(--done-soft);
+  --color-warn: var(--warn);
+  --color-warn-soft: var(--warn-soft);
+  --font-sans: "IBM Plex Sans", system-ui, sans-serif;
+  --font-display: "Manrope", system-ui, sans-serif;
+}
+
+/* light-dark() picks the value from the active color-scheme, so each preset is one block */
+:root {
+  color-scheme: light dark;
+  --done: light-dark(#16a34a, #4ade80);
+  --done-soft: light-dark(#e9f8ee, #1c3327);
+  --warn: light-dark(#b45309, #fbbf24);
+  --warn-soft: light-dark(#fdf1de, #3a2c11);
+}
+:root[data-mode="light"] { color-scheme: light; }
+:root[data-mode="dark"] { color-scheme: dark; }
+
+:root, :root[data-theme="roxo"] {
+  --ink: light-dark(#1c1a22, #f1eef7);
+  --ink-soft: light-dark(#5b5766, #b8b2c8);
+  --line: light-dark(#e4e0ec, #332f40);
+  --surface: light-dark(#ffffff, #211f2b);
+  --ground: light-dark(#faf9fc, #17151e);
+  --accent: light-dark(#6d28d9, #a78bfa);
+  --accent-soft: light-dark(#efe7fc, #2c2540);
+}
+:root[data-theme="rosa"] {
+  --ink: light-dark(#221a1f, #f7eef3);
+  --ink-soft: light-dark(#66575f, #c8b2bd);
+  --line: light-dark(#ece0e6, #402f38);
+  --surface: light-dark(#ffffff, #2b1f25);
+  --ground: light-dark(#fcf9fa, #1e151a);
+  --accent: light-dark(#be185d, #f472b6);
+  --accent-soft: light-dark(#fce7f1, #402533);
+}
+:root[data-theme="verde"] {
+  --ink: light-dark(#1a221d, #eef7f1);
+  --ink-soft: light-dark(#57665c, #b2c8ba);
+  --line: light-dark(#e0ece4, #2f4035);
+  --surface: light-dark(#ffffff, #1f2b23);
+  --ground: light-dark(#f9fcfa, #151e18);
+  --accent: light-dark(#047857, #34d399);
+  --accent-soft: light-dark(#e3f6ee, #1f3a2f);
+}
+:root[data-theme="azul"] {
+  --ink: light-dark(#1a1e22, #eef3f7);
+  --ink-soft: light-dark(#576066, #b2bec8);
+  --line: light-dark(#e0e6ec, #2f3840);
+  --surface: light-dark(#ffffff, #1f252b);
+  --ground: light-dark(#f9fbfc, #151a1e);
+  --accent: light-dark(#1d4ed8, #60a5fa);
+  --accent-soft: light-dark(#e6eefc, #1f2d44);
+}
+:root[data-theme="ambar"] {
+  --ink: light-dark(#221e1a, #f7f3ee);
+  --ink-soft: light-dark(#665e57, #c8bdb2);
+  --line: light-dark(#ece6e0, #40382f);
+  --surface: light-dark(#ffffff, #2b251f);
+  --ground: light-dark(#fcfaf7, #1e1a15);
+  --accent: light-dark(#c2410c, #fb923c);
+  --accent-soft: light-dark(#fdeee3, #3f2a1c);
+}
+:root[data-theme="grafite"] {
+  --ink: light-dark(#18181b, #f4f4f5);
+  --ink-soft: light-dark(#52525b, #a1a1aa);
+  --line: light-dark(#e4e4e7, #3f3f46);
+  --surface: light-dark(#ffffff, #27272a);
+  --ground: light-dark(#fafafa, #18181b);
+  --accent: light-dark(#3f3f46, #d4d4d8);
+  --accent-soft: light-dark(#f4f4f5, #3f3f46);
+}
+
+html {
+  scroll-padding-top: env(safe-area-inset-top, 0px);
+}
+body {
+  margin: 0;
+  background: var(--ground);
+  color: var(--ink);
+  font-family: var(--font-sans);
+  -webkit-tap-highlight-color: transparent;
+}
+h1, h2, h3 {
+  font-family: var(--font-display);
+  text-wrap: balance;
+}
+
+/* Checkbox from the reference artifact */
+.check {
+  appearance: none;
+  width: 19px;
+  height: 19px;
+  min-width: 19px;
+  margin: 1px 0 0;
+  border: 1.6px solid var(--line);
+  border-radius: 6px;
+  background: var(--surface);
+  cursor: pointer;
+  display: grid;
+  place-content: center;
+}
+.check::before {
+  content: "";
+  width: 10px;
+  height: 10px;
+  border-radius: 2px;
+  transform: scale(0);
+  transition: transform 0.12s ease;
+  background: var(--done);
+  clip-path: polygon(14% 44%, 0 65%, 50% 100%, 100% 16%, 80% 0%, 45% 62%);
+}
+.check:checked {
+  border-color: var(--done);
+  background: var(--done-soft);
+}
+.check:checked::before {
+  transform: scale(1);
+}
+
+/* Popovers are positioned by JS next to their trigger (see Menu) */
+[popover] {
+  margin: 0;
+  inset: auto;
+  padding: 0;
+  border: 1px solid var(--line);
+  border-radius: 12px;
+  background: var(--surface);
+  color: var(--ink);
+  box-shadow: 0 8px 30px rgb(0 0 0 / 0.15);
+}
