@@ -133,6 +133,9 @@
   /* Drag-and-drop: faded placeholder where the item will land, lifted copy under the pointer */
   .drag-ghost {
     opacity: 0.4;
+    outline: 2px dashed var(--ink-soft);
+    outline-offset: -2px;
+    border-radius: 12px;
   }
   .drag-lift {
     rotate: 1.5deg;
