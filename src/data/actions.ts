@@ -77,6 +77,20 @@ export function useActions() {
     return all(tasks).filter((t) => t.pageId === status.pageId && statusOf(t, list)?.id === status.id)
   }
 
+  // A null (or deleted) statusId follows whichever column is first; before another column becomes first,
+  // those tasks are pinned to the current first one so reordering columns never moves cards
+  const reorderStatuses = (ids: string[]) => {
+    const pageId = statuses.get(ids[0])?.pageId
+    const list = pageId ? pageStatuses(pageId) : []
+    const first = list[0]
+    if (first && ids[0] !== first.id) {
+      const live = new Set(list.map((s) => s.id))
+      const loose = all(tasks).filter((t) => t.pageId === pageId && !live.has(t.statusId ?? '')).map((t) => t.id)
+      if (loose.length) run(() => tasks.update(loose, (ds) => ds.forEach((d) => void (d.statusId = first.id))))
+    }
+    run(() => reorderTx(statuses, ids, 'position'))
+  }
+
   return {
     addPage(title: string) {
       const id = newId()
@@ -150,11 +164,9 @@ export function useActions() {
       run(() => statuses.delete(status.id))
     },
     moveStatus(sorted: Status[], id: string, dir: -1 | 1) {
-      run(() => reorderTx(statuses, shift(sorted.map((s) => s.id), id, dir), 'position'))
+      reorderStatuses(shift(sorted.map((s) => s.id), id, dir))
     },
-    reorderStatuses(ids: string[]) {
-      run(() => reorderTx(statuses, ids, 'position'))
-    },
+    reorderStatuses,
 
     addTask(section: Section, text: string, status?: Status) {
       const siblings = all(tasks).filter((t) => t.sectionId === section.id)
