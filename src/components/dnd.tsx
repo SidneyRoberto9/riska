@@ -15,6 +15,7 @@ import {
   type DragEndEvent,
   type DragOverEvent,
   type DragStartEvent,
+  type KeyboardCoordinateGetter,
 } from '@dnd-kit/core'
 import {
   SortableContext,
@@ -66,6 +67,16 @@ const collision: CollisionDetection = (args) => {
   return closestCorners(scoped)
 }
 
+// Arrow keys only step between droppables of the dragged kind: a section jumps section to section, not task to task
+const keyboardCoordinates: KeyboardCoordinateGetter = (event, args) => {
+  const { context } = args
+  const all = context.droppableContainers
+  const column = dataOf(context.active)?.kind === 'column'
+  const Scoped = all.constructor as new (entries: typeof all extends Map<infer K, infer V> ? [K, V][] : never) => typeof all
+  const scoped = new Scoped([...all].filter(([, c]) => (dataOf(c)?.kind === 'column') === column))
+  return sortableKeyboardCoordinates(event, { ...args, context: { ...context, droppableContainers: scoped } })
+}
+
 export function SortableBoard({
   columns,
   axis = 'y',
@@ -107,7 +118,7 @@ export function SortableBoard({
       bypassActivationConstraint: ({ event }) => !!(event.target as Element | null)?.closest?.('.drag-handle'),
     }),
     useSensor(KeyboardSensor, {
-      coordinateGetter: sortableKeyboardCoordinates,
+      coordinateGetter: keyboardCoordinates,
       keyboardCodes: { start: ['Space'], cancel: ['Escape'], end: ['Space', 'Enter'] },
     }),
   )
