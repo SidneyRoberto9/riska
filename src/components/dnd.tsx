@@ -131,10 +131,26 @@ export function SortableBoard({
     const d = dataOf(x)
     return d?.kind === 'drop' ? label('column', d.column ?? '') : who(x)
   }
+  // Where the dragged element lands if dropped on `over`: "posição i de n" within its column (or among columns)
+  const position = (a: WithData, over: WithData) => {
+    const id = String(a.id)
+    const overId = String(over.id)
+    const d = dataOf(over)
+    if (kindOf(a) === 'column') {
+      const i = cols.indexOf(overId)
+      return `posição ${(i < 0 ? cols.indexOf(id) : i) + 1} de ${cols.length}`
+    }
+    const list = items[(d?.kind === 'drop' ? d.column : findColumn(items, overId)) ?? ''] ?? []
+    const n = list.includes(id) ? list.length : list.length + 1
+    const i = d?.kind === 'drop' ? (list.includes(id) ? list.indexOf(id) + 1 : n) : list.indexOf(overId) + 1
+    return `posição ${i} de ${n}`
+  }
+  const target = (a: WithData, over: WithData) =>
+    over.id === a.id ? `na ${position(a, over)}` : `sobre ${where(over)}, ${position(a, over)}`
   const announcements: Announcements = {
     onDragStart: ({ active }) => `${cap(who(active))} levantada.`,
-    onDragOver: ({ active, over }) => (over ? `${cap(who(active))} sobre ${where(over)}.` : `${cap(who(active))} fora de uma área válida.`),
-    onDragEnd: ({ active, over }) => (over ? `${cap(who(active))} solta sobre ${where(over)}.` : `${cap(who(active))} solta.`),
+    onDragOver: ({ active, over }) => (over ? `${cap(who(active))} ${target(active, over)}.` : `${cap(who(active))} fora de uma área válida.`),
+    onDragEnd: ({ active, over }) => (over ? `${cap(who(active))} solta ${target(active, over)}.` : `${cap(who(active))} solta.`),
     onDragCancel: ({ active }) => `Movimento cancelado. ${cap(who(active))} voltou ao lugar.`,
   }
 
