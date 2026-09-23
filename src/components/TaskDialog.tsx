@@ -1,5 +1,5 @@
 import { Trash2, X } from 'lucide-react'
-import { useEffect, useId, useRef, useState } from 'react'
+import { useEffect, useId, useLayoutEffect, useRef, useState } from 'react'
 import { useActions } from '#/data/actions'
 import { statusOf } from '#/lib/status'
 import { LIMITS, type Section, type Status, type Task } from '#/lib/types'
@@ -33,7 +33,10 @@ export function TaskDialog({ task, statuses, section, onClose }: { task: Task; s
   const noteId = useId()
   const [note, setNote] = useState(task.note)
   const latest = useRef({ note, task })
-  latest.current = { note, task }
+  // Committed values for the blur/unmount save (not written during render)
+  useLayoutEffect(() => {
+    latest.current = { note, task }
+  })
   const status = statusOf(task, statuses)
 
   const saveNote = () => {
