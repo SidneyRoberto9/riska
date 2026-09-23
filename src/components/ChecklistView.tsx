@@ -1,7 +1,9 @@
 import { eq, useLiveQuery } from '@tanstack/react-db'
 import { ChevronLeft, Plus } from 'lucide-react'
-import { useEffect, useState, type FormEvent } from 'react'
+import { useRouter } from '@tanstack/react-router'
+import { useEffect, useRef, useState, type FormEvent } from 'react'
 import { useActions } from '#/data/actions'
+import { useSetPageSearch } from '#/data/page-search'
 import { useSource } from '#/data/source-context'
 import { LIMITS, type Task } from '#/lib/types'
 import { Board } from './Board'
@@ -10,9 +12,10 @@ import { InlineEdit } from './InlineEdit'
 import { PagesLink } from './links'
 import { ProgressBar } from './ProgressBar'
 import { SectionCard } from './SectionCard'
+import { TaskDialog } from './TaskDialog'
 import { ViewToggle } from './ViewToggle'
 
-export function ChecklistView({ pageId, view }: { pageId: string; view?: 'quadro'; taskId?: string }) {
+export function ChecklistView({ pageId, view, taskId }: { pageId: string; view?: 'quadro'; taskId?: string }) {
   const source = useSource()
   const a = useActions()
   const { data: pages, isReady } = useLiveQuery((q) => q.from({ p: source.pages }).where(({ p }) => eq(p.id, pageId)), [source, pageId])
@@ -20,7 +23,7 @@ export function ChecklistView({ pageId, view }: { pageId: string; view?: 'quadro
     (q) => q.from({ s: source.sections }).where(({ s }) => eq(s.pageId, pageId)).orderBy(({ s }) => s.position),
     [source, pageId],
   )
-  const { data: tasks } = useLiveQuery(
+  const { data: tasks, isReady: tasksReady } = useLiveQuery(
     (q) => q.from({ t: source.tasks }).where(({ t }) => eq(t.pageId, pageId)).orderBy(({ t }) => t.position),
     [source, pageId],
   )
@@ -33,6 +36,37 @@ export function ChecklistView({ pageId, view }: { pageId: string; view?: 'quadro
   useEffect(() => {
     if (isReady && pages[0]) a.upgradeLocalPage(pageId)
   }, [isReady, pages[0]?.id])
+
+  const setSearch = useSetPageSearch()
+  const router = useRouter()
+  // Opened from a card → closing goes back (so the phone's back button and X agree);
+  // opened from a shared link → closing replaces, so we never navigate out of the app
+  const openedHere = useRef(false)
+  // Set while our own navigation away from ?task= is in flight, so nothing navigates twice
+  const closing = useRef(false)
+  const openTask = (id: string) => {
+    openedHere.current = true
+    setSearch({ task: id })
+  }
+  const closeTask = () => {
+    // Already gone from the URL (Back was pressed) or already closing: nothing to undo
+    if (closing.current || !new URLSearchParams(location.search).has('task')) return
+    closing.current = true
+    if (openedHere.current) router.history.back()
+    else setSearch({ task: undefined }, { replace: true })
+  }
+  const dialogTask = view === 'quadro' && taskId ? tasks.find((t) => t.id === taskId) : undefined
+
+  useEffect(() => {
+    if (!taskId) {
+      openedHere.current = false
+      closing.current = false
+    } else if (tasksReady && !closing.current && !tasks.some((t) => t.id === taskId)) {
+      // Task deleted on another device while its dialog is open, or a stale link
+      closeTask()
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [taskId, tasksReady, tasks])
 
   const page = pages[0]
   if (!page) {
@@ -91,7 +125,7 @@ export function ChecklistView({ pageId, view }: { pageId: string; view?: 'quadro
       </header>
       <main>
         {view === 'quadro' ? (
-          <Board pageId={page.id} statuses={statuses} sections={sections} tasks={tasks} onOpen={() => {}} />
+          <Board pageId={page.id} statuses={statuses} sections={sections} tasks={tasks} onOpen={openTask} />
         ) : (
           <>
             {sections.length === 0 && (
@@ -122,6 +156,15 @@ export function ChecklistView({ pageId, view }: { pageId: string; view?: 'quadro
       <footer className="pt-2 text-center text-[0.78rem] text-ink-soft">
         {source.slug ? `Sincronizado na sessão ${source.slug}.` : 'Salvo só neste navegador.'}
       </footer>
+      {dialogTask && (
+        <TaskDialog
+          key={dialogTask.id}
+          task={dialogTask}
+          statuses={statuses}
+          section={sections.find((s) => s.id === dialogTask.sectionId)}
+          onClose={closeTask}
+        />
+      )}
     </>
   )
 }

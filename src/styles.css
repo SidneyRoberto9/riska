@@ -200,3 +200,50 @@
 .check:checked::before {
   transform: scale(1);
 }
+
+/* Task details: centred dialog on desktop, bottom sheet on phones */
+.task-dialog {
+  /* Preflight zeroes every margin, which drops the UA's centring of modal dialogs */
+  margin: auto;
+  width: min(560px, calc(100vw - 32px));
+  max-height: min(85dvh, 760px);
+  padding: 0;
+  border: 1px solid var(--line);
+  border-radius: 20px;
+  background: var(--surface);
+  color: var(--ink);
+  box-shadow: 0 24px 60px rgb(0 0 0 / 0.25);
+  overflow: hidden;
+}
+.task-dialog[open] {
+  animation: dialog-in 0.18s ease-out;
+}
+.task-dialog::backdrop {
+  background: rgb(0 0 0 / 0.45);
+}
+@keyframes dialog-in {
+  from {
+    opacity: 0;
+    translate: 0 8px;
+    scale: 0.98;
+  }
+}
+@media (max-width: 640px) {
+  .task-dialog {
+    width: 100%;
+    max-width: 100%;
+    max-height: 90dvh;
+    margin: auto 0 0;
+    border-bottom: 0;
+    border-radius: 20px 20px 0 0;
+    padding-bottom: env(safe-area-inset-bottom);
+  }
+  .task-dialog[open] {
+    animation: sheet-up 0.24s ease-out;
+  }
+}
+@keyframes sheet-up {
+  from {
+    translate: 0 100%;
+  }
+}
