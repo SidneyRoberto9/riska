@@ -127,10 +127,22 @@ function PageCard({ page: p, stats: s, pages }: { page: Page; stats: { done: num
       <Menu label="Ações da página">
         {(close) => (
           <>
-            <MenuItem icon={ArrowUp} onClick={() => (a.movePage(pages, p.id, -1), close())}>
+            <MenuItem
+              icon={ArrowUp}
+              onClick={() => {
+                a.movePage(pages, p.id, -1)
+                close()
+              }}
+            >
               Subir
             </MenuItem>
-            <MenuItem icon={ArrowDown} onClick={() => (a.movePage(pages, p.id, 1), close())}>
+            <MenuItem
+              icon={ArrowDown}
+              onClick={() => {
+                a.movePage(pages, p.id, 1)
+                close()
+              }}
+            >
               Descer
             </MenuItem>
             <MenuItem

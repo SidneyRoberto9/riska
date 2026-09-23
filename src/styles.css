@@ -165,6 +165,7 @@
 }
 
 @media (prefers-reduced-motion: reduce) {
+  /* biome-ignore-start lint/complexity/noImportantStyles: must beat every component-level animation */
   *,
   *::before,
   *::after {
@@ -172,6 +173,7 @@
     animation-iteration-count: 1 !important;
     transition-duration: 0.01ms !important;
   }
+  /* biome-ignore-end lint/complexity/noImportantStyles: - */
   .drag-lift {
     rotate: none;
     scale: none;

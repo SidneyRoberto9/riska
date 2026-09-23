@@ -48,12 +48,11 @@ export function ChecklistView({ pageId, view, taskId }: { pageId: string; view?:
   )
 
   // Local mode only: pages saved before statuses existed get the defaults once
+  // biome-ignore lint/correctness/useExhaustiveDependencies: `a` is rebuilt every render and pages[0].id is pageId, so this runs once per loaded page
   useEffect(() => {
     if (isReady && pages[0]) {
       a.upgradeLocalPage(pageId)
     }
-    // `a` is rebuilt every render and pages[0].id is pageId: run once per loaded page
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [isReady, pages[0]?.id])
 
   const setSearch = useSetPageSearch()
@@ -81,6 +80,7 @@ export function ChecklistView({ pageId, view, taskId }: { pageId: string; view?:
   }
   const dialogTask = view === "quadro" && taskId ? tasks.find((t) => t.id === taskId) : undefined
 
+  // biome-ignore lint/correctness/useExhaustiveDependencies: closeTask reads refs and the URL, re-running on its identity would close twice
   useEffect(() => {
     if (!taskId) {
       openedHere.current = false
@@ -89,7 +89,6 @@ export function ChecklistView({ pageId, view, taskId }: { pageId: string; view?:
       // Task deleted on another device while its dialog is open, or a stale link
       closeTask()
     }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [taskId, tasksReady, tasks])
 
   const page = pages[0]

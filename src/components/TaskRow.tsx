@@ -88,23 +88,46 @@ export function TaskRow({ task, siblings, statuses }: { task: Task; siblings: Ta
             <StatusOptions task={task} statuses={statuses} onDone={close} />
           ) : (
             <>
-              <MenuItem icon={ArrowUp} disabled={i <= 0} onClick={() => (a.moveTask(siblings, task.id, -1), close())}>
+              <MenuItem
+                icon={ArrowUp}
+                disabled={i <= 0}
+                onClick={() => {
+                  a.moveTask(siblings, task.id, -1)
+                  close()
+                }}
+              >
                 Subir
               </MenuItem>
               <MenuItem
                 icon={ArrowDown}
                 disabled={i >= siblings.length - 1}
-                onClick={() => (a.moveTask(siblings, task.id, 1), close())}
+                onClick={() => {
+                  a.moveTask(siblings, task.id, 1)
+                  close()
+                }}
               >
                 Descer
               </MenuItem>
               <MenuItem icon={CircleDot} onClick={() => setMenu("status")}>
                 Status{status ? `: ${status.name}` : ""}
               </MenuItem>
-              <MenuItem icon={StickyNote} onClick={() => (setEditingNote(true), close())}>
+              <MenuItem
+                icon={StickyNote}
+                onClick={() => {
+                  setEditingNote(true)
+                  close()
+                }}
+              >
                 {task.note ? "Editar nota" : "Adicionar nota"}
               </MenuItem>
-              <MenuItem icon={Trash2} danger onClick={() => (a.deleteTask(task.id), close())}>
+              <MenuItem
+                icon={Trash2}
+                danger
+                onClick={() => {
+                  a.deleteTask(task.id)
+                  close()
+                }}
+              >
                 Deletar tarefa
               </MenuItem>
             </>

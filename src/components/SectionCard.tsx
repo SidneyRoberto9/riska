@@ -64,24 +64,39 @@ export function SectionCard({
               <MenuItem
                 icon={ArrowUp}
                 disabled={i <= 0}
-                onClick={() => (a.moveSection(siblings, section.id, -1), close())}
+                onClick={() => {
+                  a.moveSection(siblings, section.id, -1)
+                  close()
+                }}
               >
                 Subir
               </MenuItem>
               <MenuItem
                 icon={ArrowDown}
                 disabled={i >= siblings.length - 1}
-                onClick={() => (a.moveSection(siblings, section.id, 1), close())}
+                onClick={() => {
+                  a.moveSection(siblings, section.id, 1)
+                  close()
+                }}
               >
                 Descer
               </MenuItem>
               <MenuItem
                 icon={Highlighter}
-                onClick={() => (a.updateSection(section.id, { highlight: !section.highlight }), close())}
+                onClick={() => {
+                  a.updateSection(section.id, { highlight: !section.highlight })
+                  close()
+                }}
               >
                 {section.highlight ? "Remover destaque" : "Destacar"}
               </MenuItem>
-              <MenuItem icon={StickyNote} onClick={() => (setEditingNote(true), close())}>
+              <MenuItem
+                icon={StickyNote}
+                onClick={() => {
+                  setEditingNote(true)
+                  close()
+                }}
+              >
                 {section.note ? "Editar nota" : "Adicionar nota"}
               </MenuItem>
               <MenuItem

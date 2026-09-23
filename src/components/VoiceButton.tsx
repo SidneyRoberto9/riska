@@ -48,7 +48,10 @@ export function VoiceButton({
       rec.current?.stop()
       return
     }
-    const R = getRecognition()!
+    const R = getRecognition()
+    if (!R) {
+      return
+    }
     const r = new R()
     const base = value.trim()
     r.lang = "pt-BR"

@@ -77,7 +77,7 @@ export const updatePagesFn = createServerFn({ method: "POST" })
     const sql = await db()
     await sql.begin(async (tx) => {
       for (const { id, changes } of data.items) {
-        await tx`update pages set ${tx(changes as Record<string, any>)} where id = ${id} and session_slug = ${s}`
+        await tx`update pages set ${tx(changes as Record<string, unknown>)} where id = ${id} and session_slug = ${s}`
       }
     })
   })
@@ -115,7 +115,7 @@ export const updateSectionsFn = createServerFn({ method: "POST" })
     const sql = await db()
     await sql.begin(async (tx) => {
       for (const { id, changes } of data.items) {
-        await tx`update sections set ${tx(changes as Record<string, any>)}
+        await tx`update sections set ${tx(changes as Record<string, unknown>)}
           where id = ${id} and page_id in (select id from pages where session_slug = ${s})`
       }
     })
@@ -167,7 +167,7 @@ export const updateStatusesFn = createServerFn({ method: "POST" })
     const sql = await db()
     await sql.begin(async (tx) => {
       for (const { id, changes } of data.items) {
-        await tx`update statuses set ${tx(changes as Record<string, any>)}
+        await tx`update statuses set ${tx(changes as Record<string, unknown>)}
           where id = ${id} and page_id in (select id from pages where session_slug = ${s})`
       }
     })
@@ -215,7 +215,7 @@ export const updateTasksFn = createServerFn({ method: "POST" })
         const statusId = changes.statusId ?? null
         // The (possibly new) section must be in this session and a new status must be on that section's page;
         // otherwise nothing is written (same as updating a row another device already deleted)
-        await tx`update tasks t set ${tx(changes as Record<string, any>)}
+        await tx`update tasks t set ${tx(changes as Record<string, unknown>)}
           from sections sc join pages p on p.id = sc.page_id
           where t.id = ${id} and sc.id = coalesce(${sectionId}::text, t.section_id) and p.session_slug = ${s}
             and (${statusId}::text is null

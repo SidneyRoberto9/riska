@@ -207,30 +207,56 @@ function Column({
         <Menu label={`Ações da coluna ${status.name}`} onClose={() => setEditing(false)}>
           {(close) =>
             editing ? (
-              <StatusEditor initial={status} onSave={(v) => (a.updateStatus(status, v), close())} />
+              <StatusEditor
+                initial={status}
+                onSave={(v) => {
+                  a.updateStatus(status, v)
+                  close()
+                }}
+              />
             ) : (
               <>
                 <MenuItem icon={Palette} onClick={() => setEditing(true)}>
                   Editar nome e cor
                 </MenuItem>
-                <MenuItem icon={CheckCheck} onClick={() => (a.updateStatus(status, { done: !status.done }), close())}>
+                <MenuItem
+                  icon={CheckCheck}
+                  onClick={() => {
+                    a.updateStatus(status, { done: !status.done })
+                    close()
+                  }}
+                >
                   {status.done ? "Não conta como concluída" : "Conta como concluída"}
                 </MenuItem>
                 <MenuItem
                   icon={ArrowLeft}
                   disabled={i <= 0}
-                  onClick={() => (a.moveStatus(statuses, status.id, -1), close())}
+                  onClick={() => {
+                    a.moveStatus(statuses, status.id, -1)
+                    close()
+                  }}
                 >
                   Mover para a esquerda
                 </MenuItem>
                 <MenuItem
                   icon={ArrowRight}
                   disabled={i >= statuses.length - 1}
-                  onClick={() => (a.moveStatus(statuses, status.id, 1), close())}
+                  onClick={() => {
+                    a.moveStatus(statuses, status.id, 1)
+                    close()
+                  }}
                 >
                   Mover para a direita
                 </MenuItem>
-                <MenuItem icon={Trash2} danger disabled={statuses.length <= 1} onClick={() => (close(), remove())}>
+                <MenuItem
+                  icon={Trash2}
+                  danger
+                  disabled={statuses.length <= 1}
+                  onClick={() => {
+                    close()
+                    remove()
+                  }}
+                >
                   Deletar coluna
                 </MenuItem>
               </>
@@ -309,6 +335,7 @@ function Card({
   const blocked = useClickGuard()
 
   return (
+    // biome-ignore lint/a11y/useKeyWithClickEvents: pointer shortcut only, keyboard opens the card through its inner button
     <article
       ref={setNodeRef}
       style={style}
@@ -351,7 +378,14 @@ function Card({
                   <MenuItem icon={CircleDot} onClick={() => setMenu("status")}>
                     Mover para…
                   </MenuItem>
-                  <MenuItem icon={Trash2} danger onClick={() => (a.deleteTask(task.id), close())}>
+                  <MenuItem
+                    icon={Trash2}
+                    danger
+                    onClick={() => {
+                      a.deleteTask(task.id)
+                      close()
+                    }}
+                  >
                     Deletar tarefa
                   </MenuItem>
                 </>
@@ -434,6 +468,7 @@ function AddCard({ status, sections }: { status: Status; sections: Section[] }) 
       <div className="flex items-center gap-1">
         <input
           ref={input}
+          // biome-ignore lint/a11y/noAutofocus: rendered only right after the user asks to type here (opened editor / PIN screen)
           autoFocus
           value={text}
           onChange={(e) => setText(e.target.value)}
@@ -499,7 +534,14 @@ function NewColumn({ pageId }: { pageId: string }) {
         </button>
       )}
     >
-      {(close) => <StatusEditor onSave={(v) => (a.addStatus(pageId, v), close())} />}
+      {(close) => (
+        <StatusEditor
+          onSave={(v) => {
+            a.addStatus(pageId, v)
+            close()
+          }}
+        />
+      )}
     </Popover>
   )
 }

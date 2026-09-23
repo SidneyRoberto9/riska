@@ -54,6 +54,7 @@ export function PinGate({ slug }: { slug: string }) {
           </span>
         ))}
         <input
+          // biome-ignore lint/a11y/noAutofocus: rendered only right after the user asks to type here (opened editor / PIN screen)
           autoFocus
           value={pin}
           readOnly={busy}

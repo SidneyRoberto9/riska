@@ -61,13 +61,14 @@ export function TaskDialog({
     }
   }
 
+  // biome-ignore lint/correctness/useExhaustiveDependencies: open once on mount, save the latest note (via ref) on unmount
   useEffect(() => {
     ref.current?.showModal()
     return saveNote
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [])
 
   return (
+    // biome-ignore lint/a11y/useKeyWithClickEvents: backdrop click to close, Esc is handled natively by <dialog>
     <dialog
       ref={ref}
       aria-labelledby={titleId}

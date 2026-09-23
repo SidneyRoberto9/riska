@@ -94,7 +94,13 @@ export function useActions() {
         .map((t) => t.id)
       // Separate transaction: tasks and statuses are different collections, persisted by different server functions
       if (loose.length) {
-        run(() => tasks.update(loose, (ds) => ds.forEach((d) => void (d.statusId = first.id))))
+        run(() =>
+          tasks.update(loose, (ds) => {
+            for (const d of ds) {
+              d.statusId = first.id
+            }
+          })
+        )
       }
     }
     run(() => reorderTx(statuses, ids, "position"))
@@ -200,7 +206,13 @@ export function useActions() {
         .filter((t) => t.done !== done)
         .map((t) => t.id)
       if (ids.length) {
-        run(() => tasks.update(ids, (ds) => ds.forEach((d) => void (d.done = done))))
+        run(() =>
+          tasks.update(ids, (ds) => {
+            for (const d of ds) {
+              d.done = done
+            }
+          })
+        )
       }
     },
     // Tasks move to the neighbour column first, so nothing ends up orphaned; the last column can't be deleted

@@ -52,6 +52,7 @@ export function StatusEditor({
   return (
     <form onSubmit={submit} className="w-64 space-y-3 p-3">
       <input
+        // biome-ignore lint/a11y/noAutofocus: rendered only right after the user asks to type here (opened editor / PIN screen)
         autoFocus
         value={name}
         maxLength={LIMITS.statusName}
@@ -135,7 +136,7 @@ export function StatusOptions({ task, statuses, onDone }: { task: Task; statuses
     )
   }
   return (
-    <div role="group" aria-label="Status da tarefa">
+    <fieldset aria-label="Status da tarefa" className="min-w-0">
       {statuses.map((s) => (
         <button
           key={s.id}
@@ -162,7 +163,7 @@ export function StatusOptions({ task, statuses, onDone }: { task: Task; statuses
         <Plus size={16} aria-hidden />
         Novo status
       </button>
-    </div>
+    </fieldset>
   )
 }
 

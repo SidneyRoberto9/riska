@@ -46,6 +46,7 @@ function RootDocument({ children }: { children: ReactNode }) {
     <html lang="pt-BR" data-theme={theme?.theme ?? "roxo"} data-mode={theme?.mode ?? "system"} suppressHydrationWarning>
       <head>
         <HeadContent />
+        {/* biome-ignore lint/security/noDangerouslySetInnerHtml: static constant, sets the theme before paint to avoid a flash */}
         <script dangerouslySetInnerHTML={{ __html: localThemeScript }} />
       </head>
       <body>

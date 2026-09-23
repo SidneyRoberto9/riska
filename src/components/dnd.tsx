@@ -121,6 +121,7 @@ export function SortableBoard({
   const dndId = useId()
 
   // After a drop the final order stays on screen until the optimistic write reaches the live data (no snap-back)
+  // biome-ignore lint/correctness/useExhaustiveDependencies: liveKey is the trigger (serialized live data), not a value read inside
   useEffect(() => {
     if (!settling.current) {
       return
