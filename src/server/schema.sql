@@ -49,8 +49,7 @@ ALTER TABLE tasks ADD COLUMN IF NOT EXISTS note           text NOT NULL DEFAULT 
 ALTER TABLE tasks ADD COLUMN IF NOT EXISTS created_at     timestamptz;
 ALTER TABLE tasks ADD COLUMN IF NOT EXISTS board_position int NOT NULL DEFAULT 0;
 
--- Idempotent data migration (runs on every boot): default statuses for pages without any,
--- done tasks into the first done column, board order seeded from list order, free badges dropped.
+-- Idempotent data migration (runs on every boot): default statuses for pages without any.
 INSERT INTO statuses (id, page_id, name, color, done, position)
 SELECT substr(md5(random()::text || p.id || d.position), 1, 16), p.id, d.name, d.color, d.done, d.position
 FROM pages p
@@ -58,11 +57,18 @@ CROSS JOIN (VALUES ('A Fazer', '#6b7280', false, 1), ('Em Andamento', '#2563eb',
   AS d(name, color, done, position)
 WHERE NOT EXISTS (SELECT 1 FROM statuses s WHERE s.page_id = p.id);
 
-UPDATE tasks t SET status_id = (
-  SELECT st.id FROM statuses st JOIN sections sc ON sc.page_id = st.page_id
-  WHERE sc.id = t.section_id AND st.done ORDER BY st.position LIMIT 1)
-WHERE t.done AND t.status_id IS NULL;
-
-UPDATE tasks SET board_position = position WHERE board_position = 0;
+-- One-time backfill, only while the badges-era column still exists (it is dropped right after):
+-- done tasks into the first done column, board order seeded from list order
+DO $$
+BEGIN
+  IF EXISTS (SELECT 1 FROM information_schema.columns
+             WHERE table_schema = current_schema() AND table_name = 'tasks' AND column_name = 'badges') THEN
+    UPDATE tasks t SET status_id = (
+      SELECT st.id FROM statuses st JOIN sections sc ON sc.page_id = st.page_id
+      WHERE sc.id = t.section_id AND st.done ORDER BY st.position LIMIT 1)
+    WHERE t.done AND t.status_id IS NULL;
+    UPDATE tasks SET board_position = position WHERE board_position = 0;
+  END IF;
+END $$;
 
 ALTER TABLE tasks DROP COLUMN IF EXISTS badges;
