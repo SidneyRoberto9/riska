@@ -1,3 +1,4 @@
+import { ArrowDown, ArrowUp, Plus, Tag, Trash2 } from 'lucide-react'
 import { useState, type FormEvent } from 'react'
 import { useActions } from '#/data/actions'
 import { LIMITS, type Badge, type Section, type Task } from '#/lib/types'
@@ -10,9 +11,10 @@ export function TaskRow({ task, siblings }: { task: Task; siblings: Task[] }) {
   const a = useActions()
   const [addingBadge, setAddingBadge] = useState(false)
   const setBadges = (badges: Badge[]) => a.updateTask(task.id, { badges })
+  const i = siblings.findIndex((t) => t.id === task.id)
 
   return (
-    <div className="flex items-start gap-2.5 border-t border-line py-2 pl-1 first:border-t-0">
+    <div className="group flex items-start gap-2.5 border-t border-line py-2 pl-1 first:border-t-0">
       <label className="-m-3 cursor-pointer p-3">
         <input
           type="checkbox"
@@ -28,8 +30,9 @@ export function TaskRow({ task, siblings }: { task: Task; siblings: Task[] }) {
           required
           multiline
           maxLength={LIMITS.task}
+          label="Texto da tarefa"
           onSave={(text) => a.updateTask(task.id, { text })}
-          className={task.done ? 'text-ink-soft line-through decoration-line' : ''}
+          className={task.done ? 'text-ink-soft line-through decoration-ink-soft/40' : ''}
         />
         {task.badges.map((b, j) => (
           <Popover key={j} trigger={(p) => <BadgeChip {...p} badge={b} className="ml-1.5" />}>
@@ -49,7 +52,7 @@ export function TaskRow({ task, siblings }: { task: Task; siblings: Task[] }) {
           </Popover>
         ))}
       </div>
-      <Menu label="Ações da tarefa" onClose={() => setAddingBadge(false)}>
+      <Menu label="Ações da tarefa" quiet onClose={() => setAddingBadge(false)}>
         {(close) =>
           addingBadge ? (
             <BadgeEditor
@@ -61,11 +64,19 @@ export function TaskRow({ task, siblings }: { task: Task; siblings: Task[] }) {
             />
           ) : (
             <>
-              <MenuItem onClick={() => (a.moveTask(siblings, task.id, -1), close())}>↑ Subir</MenuItem>
-              <MenuItem onClick={() => (a.moveTask(siblings, task.id, 1), close())}>↓ Descer</MenuItem>
-              {task.badges.length < LIMITS.badges && <MenuItem onClick={() => setAddingBadge(true)}>＋ Badge</MenuItem>}
-              <MenuItem danger onClick={() => (a.deleteTask(task.id), close())}>
-                Deletar
+              <MenuItem icon={ArrowUp} disabled={i <= 0} onClick={() => (a.moveTask(siblings, task.id, -1), close())}>
+                Subir
+              </MenuItem>
+              <MenuItem icon={ArrowDown} disabled={i >= siblings.length - 1} onClick={() => (a.moveTask(siblings, task.id, 1), close())}>
+                Descer
+              </MenuItem>
+              {task.badges.length < LIMITS.badges && (
+                <MenuItem icon={Tag} onClick={() => setAddingBadge(true)}>
+                  Adicionar badge
+                </MenuItem>
+              )}
+              <MenuItem icon={Trash2} danger onClick={() => (a.deleteTask(task.id), close())}>
+                Deletar tarefa
               </MenuItem>
             </>
           )
@@ -86,14 +97,16 @@ export function NewTaskInput({ section }: { section: Section }) {
     setText('')
   }
   return (
-    <form onSubmit={submit} className="flex items-center gap-2 border-t border-line py-1.5 pl-[33px]">
+    <form onSubmit={submit} className="flex items-center gap-2.5 border-t border-line py-1.5 pl-1">
+      <Plus size={19} aria-hidden className="shrink-0 text-ink-soft" />
       <input
         value={text}
         onChange={(e) => setText(e.target.value)}
         maxLength={LIMITS.task}
-        placeholder="+ nova tarefa"
+        placeholder="Nova tarefa…"
+        autoComplete="off"
         aria-label="Nova tarefa"
-        className="min-w-0 flex-1 bg-transparent py-1.5 text-[0.92rem] outline-none placeholder:text-ink-soft"
+        className="min-w-0 flex-1 bg-transparent rounded-md py-1.5 text-[0.92rem] placeholder:text-ink-soft"
       />
       <VoiceButton value={text} onChange={setText} />
     </form>

@@ -1,3 +1,4 @@
+import { ArrowDown, ArrowUp, Highlighter, StickyNote, Trash2 } from 'lucide-react'
 import { useState } from 'react'
 import { useActions } from '#/data/actions'
 import { LIMITS, type Section, type Task } from '#/lib/types'
@@ -18,6 +19,7 @@ export function SectionCard({
 }) {
   const a = useActions()
   const [editingNote, setEditingNote] = useState(false)
+  const i = siblings.findIndex((s) => s.id === section.id)
 
   return (
     <section
@@ -34,26 +36,34 @@ export function SectionCard({
             value={section.title}
             required
             maxLength={LIMITS.title}
+            label="Título da seção"
             onSave={(title) => a.updateSection(section.id, { title })}
           />
         </h2>
         <Menu label="Ações da seção">
           {(close) => (
             <>
-              <MenuItem onClick={() => (a.moveSection(siblings, section.id, -1), close())}>↑ Subir</MenuItem>
-              <MenuItem onClick={() => (a.moveSection(siblings, section.id, 1), close())}>↓ Descer</MenuItem>
-              <MenuItem onClick={() => (a.updateSection(section.id, { highlight: !section.highlight }), close())}>
+              <MenuItem icon={ArrowUp} disabled={i <= 0} onClick={() => (a.moveSection(siblings, section.id, -1), close())}>
+                Subir
+              </MenuItem>
+              <MenuItem icon={ArrowDown} disabled={i >= siblings.length - 1} onClick={() => (a.moveSection(siblings, section.id, 1), close())}>
+                Descer
+              </MenuItem>
+              <MenuItem icon={Highlighter} onClick={() => (a.updateSection(section.id, { highlight: !section.highlight }), close())}>
                 {section.highlight ? 'Remover destaque' : 'Destacar'}
               </MenuItem>
-              <MenuItem onClick={() => (setEditingNote(true), close())}>{section.note ? 'Editar nota' : 'Adicionar nota'}</MenuItem>
+              <MenuItem icon={StickyNote} onClick={() => (setEditingNote(true), close())}>
+                {section.note ? 'Editar nota' : 'Adicionar nota'}
+              </MenuItem>
               <MenuItem
+                icon={Trash2}
                 danger
                 onClick={() => {
                   close()
                   if (confirm(`Deletar a seção "${section.title}" e suas tarefas?`)) a.deleteSection(section.id)
                 }}
               >
-                Deletar
+                Deletar seção
               </MenuItem>
             </>
           )}
@@ -65,7 +75,8 @@ export function SectionCard({
             key={String(editingNote)}
             value={section.note}
             multiline
-            placeholder="Nota da seção"
+            placeholder="Nota da seção…"
+            label="Nota da seção"
             maxLength={LIMITS.note}
             startEditing={editingNote}
             onDone={() => setEditingNote(false)}

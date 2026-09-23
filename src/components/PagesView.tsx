@@ -1,4 +1,5 @@
 import { useLiveQuery } from '@tanstack/react-db'
+import { ArrowDown, ArrowUp, Trash2 } from 'lucide-react'
 import { useNavigate } from '@tanstack/react-router'
 import { useState, type FormEvent } from 'react'
 import { useActions } from '#/data/actions'
@@ -64,9 +65,10 @@ export function PagesView() {
               <Menu label="Ações da página">
                 {(close) => (
                   <>
-                    <MenuItem onClick={() => (a.movePage(pages, p.id, -1), close())}>↑ Subir</MenuItem>
-                    <MenuItem onClick={() => (a.movePage(pages, p.id, 1), close())}>↓ Descer</MenuItem>
+                    <MenuItem icon={ArrowUp} onClick={() => (a.movePage(pages, p.id, -1), close())}>Subir</MenuItem>
+                    <MenuItem icon={ArrowDown} onClick={() => (a.movePage(pages, p.id, 1), close())}>Descer</MenuItem>
                     <MenuItem
+                      icon={Trash2}
                       danger
                       onClick={() => {
                         close()

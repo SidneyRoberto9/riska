@@ -1,3 +1,4 @@
+import { Mic, Square } from 'lucide-react'
 import { useEffect, useRef, useState } from 'react'
 
 type Recognition = {
@@ -58,9 +59,13 @@ export function VoiceButton({ value, onChange }: { value: string; onChange: (tex
       onClick={toggle}
       aria-pressed={listening}
       aria-label={listening ? 'Parar ditado' : 'Ditar tarefa'}
-      className={`grid size-10 shrink-0 place-items-center rounded-lg ${listening ? 'animate-pulse bg-accent-soft' : 'opacity-70 hover:opacity-100'}`}
+      title={listening ? 'Parar ditado' : 'Ditar tarefa'}
+      className={`relative grid size-10 shrink-0 place-items-center rounded-full ${
+        listening ? 'bg-accent text-surface' : 'text-ink-soft hover:bg-accent-soft hover:text-accent'
+      }`}
     >
-      🎤
+      {listening && <span aria-hidden className="absolute inset-0 animate-ping rounded-full bg-accent/40" />}
+      {listening ? <Square size={14} fill="currentColor" aria-hidden className="relative" /> : <Mic size={18} aria-hidden />}
     </button>
   )
 }

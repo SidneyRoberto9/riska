@@ -11,6 +11,7 @@ export function InlineEdit({
   maxLength,
   startEditing = false,
   onDone,
+  label,
 }: {
   value: string
   onSave: (value: string) => void
@@ -21,6 +22,8 @@ export function InlineEdit({
   maxLength?: number
   startEditing?: boolean
   onDone?: () => void
+  /** Accessible name for the field while editing */
+  label?: string
 }) {
   const [editing, setEditing] = useState(startEditing)
   const [draft, setDraft] = useState(value)
@@ -57,6 +60,7 @@ export function InlineEdit({
     value: draft,
     maxLength,
     placeholder,
+    'aria-label': label,
     onChange: (e: { target: { value: string } }) => setDraft(e.target.value),
     onBlur: commit,
     onKeyDown: (e: React.KeyboardEvent<HTMLInputElement | HTMLTextAreaElement>) => {
