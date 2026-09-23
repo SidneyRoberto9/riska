@@ -72,6 +72,8 @@ export function InlineEdit({
     onBlur: commit,
     onKeyDown: (e: React.KeyboardEvent<HTMLInputElement | HTMLTextAreaElement>) => {
       if (e.key === 'Escape') {
+        // Also keeps an enclosing <dialog> from closing on the same Esc
+        e.preventDefault()
         cancelled.current = true
         e.currentTarget.blur()
       } else if (e.key === 'Enter' && !e.shiftKey) {
