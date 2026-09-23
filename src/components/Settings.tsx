@@ -1,5 +1,5 @@
 import { useQueryClient } from '@tanstack/react-query'
-import { useNavigate } from '@tanstack/react-router'
+import { useNavigate, useRouter } from '@tanstack/react-router'
 import { useState, type FormEvent } from 'react'
 import { useActions } from '#/data/actions'
 import { forgetSession } from '#/data/recent'
@@ -95,6 +95,7 @@ function ShareLink({ slug }: { slug: string }) {
 
 function DeleteSession({ slug }: { slug: string }) {
   const navigate = useNavigate()
+  const router = useRouter()
   const queryClient = useQueryClient()
   const [confirm, setConfirm] = useState('')
   const [pin, setPin] = useState('')
@@ -115,7 +116,11 @@ function DeleteSession({ slug }: { slug: string }) {
       forgetServerSource(slug)
       queryClient.removeQueries({ predicate: (q) => q.queryKey[1] === slug })
       navigate({ to: '/' })
-    } catch {
+    } catch (err) {
+      if ((err as Error)?.message === 'UNAUTHORIZED') {
+        router.invalidate()
+        return
+      }
       setError('Confira o slug e o PIN')
     } finally {
       setBusy(false)
