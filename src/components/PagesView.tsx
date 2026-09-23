@@ -121,7 +121,7 @@ function PageCard({ page: p, stats: s, pages }: { page: Page; stats: { done: num
               danger
               onClick={() => {
                 close()
-                if (confirm(`Deletar a página "${p.title}"?`)) a.deletePage(p.id)
+                if (confirm(`Deletar a página “${p.title}”?`)) a.deletePage(p.id)
               }}
             >
               Deletar

@@ -76,7 +76,7 @@ export function SectionCard({
                 danger
                 onClick={() => {
                   close()
-                  if (confirm(`Deletar a seção "${section.title}" e suas tarefas?`)) a.deleteSection(section.id)
+                  if (confirm(`Deletar a seção “${section.title}” e suas tarefas?`)) a.deleteSection(section.id)
                 }}
               >
                 Deletar seção
