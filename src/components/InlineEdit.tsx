@@ -1,4 +1,5 @@
 import { useRef, useState } from 'react'
+import { VoiceButton } from './VoiceButton'
 
 // Click to edit; Enter or blur saves, Esc cancels. Empty value is ignored when `required`.
 export function InlineEdit({
@@ -12,6 +13,8 @@ export function InlineEdit({
   startEditing = false,
   onDone,
   label,
+  voice,
+  viewClassName = 'inline',
 }: {
   value: string
   onSave: (value: string) => void
@@ -24,6 +27,10 @@ export function InlineEdit({
   onDone?: () => void
   /** Accessible name for the field while editing */
   label?: string
+  /** Shows a dictation button while editing, labelled with this text */
+  voice?: string
+  /** Display-mode classes (default `inline`), e.g. `block line-clamp-2` */
+  viewClassName?: string
 }) {
   const [editing, setEditing] = useState(startEditing)
   const [draft, setDraft] = useState(value)
@@ -33,7 +40,7 @@ export function InlineEdit({
     return (
       <button
         type="button"
-        className={`inline cursor-text text-left break-words ${className}`}
+        className={`${viewClassName} cursor-text text-left break-words ${className}`}
         onClick={() => {
           setDraft(value)
           setEditing(true)
@@ -72,8 +79,19 @@ export function InlineEdit({
         e.currentTarget.blur()
       }
     },
-    className: `block w-full rounded-md bg-accent-soft/60 px-1 -mx-1 outline-2 outline-accent/40 ${className}`,
+    className: `block w-full min-w-0 rounded-md bg-accent-soft/60 px-1 -mx-1 outline-2 outline-accent/40 ${className}`,
   }
 
-  return multiline ? <textarea rows={1} {...props} className={`${props.className} resize-none field-sizing-content`} /> : <input {...props} />
+  const field = multiline ? (
+    <textarea rows={1} {...props} className={`${props.className} resize-none field-sizing-content`} />
+  ) : (
+    <input {...props} />
+  )
+  if (!voice) return field
+  return (
+    <span className="flex items-start gap-1">
+      {field}
+      <VoiceButton value={draft} onChange={setDraft} label={voice} />
+    </span>
+  )
 }
