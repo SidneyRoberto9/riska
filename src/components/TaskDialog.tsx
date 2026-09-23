@@ -91,7 +91,7 @@ export function TaskDialog({ task, statuses, section, onClose }: { task: Task; s
           </button>
         </header>
 
-        <div className="flex-1 space-y-5 overflow-y-auto p-4">
+        <div className="flex-1 space-y-5 overflow-y-auto overscroll-contain p-4">
           <dl className="m-0 grid grid-cols-[auto_1fr] items-center gap-x-5 gap-y-2.5 text-sm">
             <dt className="text-ink-soft">Status</dt>
             <dd className="m-0">
