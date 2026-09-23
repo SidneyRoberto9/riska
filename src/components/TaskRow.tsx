@@ -19,7 +19,7 @@ export function TaskRow({ task, siblings }: { task: Task; siblings: Task[] }) {
           className="check"
           checked={task.done}
           onChange={(e) => a.updateTask(task.id, { done: e.target.checked })}
-          aria-label="Concluída"
+          aria-label={`Concluída: ${task.text}`}
         />
       </label>
       <div className="min-w-0 flex-1 text-[0.92rem] leading-[1.42]">
