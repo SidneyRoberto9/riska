@@ -72,8 +72,8 @@ tasks (
 ```
 
 - Índices em `pages(session_slug)`, `sections(page_id)`, `tasks(section_id)`.
-- Migração: `schema.sql` com `CREATE TABLE/INDEX IF NOT EXISTS`, executado uma vez no boot
-  do servidor.
+- Migração: `schema.sql` com `CREATE TABLE/INDEX IF NOT EXISTS`, executado de forma lazy na
+  primeira query do processo (retentado na próxima requisição se falhar).
 - `position`: inteiro; novo item = `max + 1`; reordenar ↑/↓ troca a posição com o vizinho.
 - Slug imutável: nenhuma rota/função atualiza `sessions.slug`.
 
@@ -103,9 +103,10 @@ createLocalSource()      // localStorageCollectionOptions
 - Modo anônimo: `localStorageCollectionOptions` com chaves `checklist-local-*`; sync entre
   abas grátis via `storage` event. `settings` local guarda tema/modo.
 - QueryClient: `refetchInterval: 15_000`, `refetchOnWindowFocus: true`.
-- Reordenar: `createTransaction` com as duas atualizações de `position` → uma server
-  function que roda ambas numa transação SQL.
-- Progresso: `useLiveQuery` sobre sections ⨝ tasks filtrado por `page_id`; `done/total`.
+- Reordenar: `collection.update([a, b], …)` em lote troca as duas `position` → um único
+  `onUpdate` → uma server function que roda ambas numa transação SQL.
+- Progresso: tasks vêm do servidor com `pageId` (derivado via join, não é coluna); `useLiveQuery`
+  filtra tasks por `pageId`; `done/total`.
   Lista de páginas mostra mini-barra por página com a mesma query agregada.
 - SSR (modo slug): loader da rota busca dados no servidor e pré-popula as collections; tema
   e modo aplicados no `<html>` no SSR (sem flash).
@@ -123,17 +124,19 @@ tentar de novo" que reexecuta a mutação.
   `INSERT ... ON CONFLICT DO NOTHING` é a checagem real → "slug já existe".
 - **Hash:** `scrypt` do `node:crypto` com salt aleatório de 16 bytes; comparação com
   `timingSafeEqual`.
-- **Entrar:** PIN correto grava cookie `ck_<slug>` = `slug.assinatura` (HMAC-SHA256 com
-  `COOKIE_SECRET`), httpOnly, `SameSite=Lax`, `Secure` em produção, 1 ano.
+- **Entrar:** PIN correto grava cookie `ck_<slug>` = `slug.assinatura`, onde assinatura =
+  HMAC-SHA256(`COOKIE_SECRET`, `slug:pin_hash`); httpOnly, `SameSite=Lax`, `Secure` em
+  produção, 1 ano. Como o `pin_hash` tem salt novo a cada criação, deletar e recriar o mesmo
+  slug invalida todos os cookies antigos.
 - **Força bruta:** cada erro incrementa `failed_attempts`; a cada 5 erros,
   `locked_until = now() + 15min * 2^lock_level` (teto 24 h) e `lock_level++`,
   `failed_attempts = 0`. Acerto zera `failed_attempts` e `lock_level`. Durante o bloqueio,
   resposta "bloqueado até HH:MM" sem checar PIN.
 - **Anti-enumeração na tela de PIN:** slug inexistente responde igual a PIN errado.
   (A checagem de disponibilidade na criação revela existência por design — aceito.)
-- **Autorização:** middleware de server function valida o cookie do slug em toda operação
-  de dados; inválido → 401 → UI volta para a tela de PIN. Escritas sempre filtram por
-  posse (`pages.session_slug = $slug`, via join para sections/tasks) — trocar id não
+- **Autorização:** helper `requireAccess(slug)` chamado no início de toda server function de
+  dados valida o cookie contra o `pin_hash` atual; inválido → erro `UNAUTHORIZED` → UI
+  volta para a tela de PIN. Escritas sempre filtram por posse (`pages.session_slug = $slug`, via join para sections/tasks) — trocar id não
   alcança dados de outra sessão.
 - **Validação no servidor (manual, sem Zod):** título/subtítulo/seção ≤ 200 chars, nota ≤
   500, task ≤ 1000, ≤ 10 badges por task, badge texto ≤ 30, cor `^#[0-9a-f]{6}$`,
@@ -149,7 +152,7 @@ tentar de novo" que reexecuta a mutação.
 | 401 | Redireciona para tela de PIN do slug |
 | Slug inexistente em `/s/$slug` | Tela de PIN (anti-enumeração); PIN sempre falha |
 | `pageId` inexistente | Página "não encontrada" com link para a lista |
-| Postgres fora no boot | Processo loga e sai com código ≠ 0 (Docker reinicia) |
+| Postgres fora do ar | Server function falha → rollback + toast; migração é retentada na próxima requisição |
 
 ## Interface
 
