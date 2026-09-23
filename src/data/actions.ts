@@ -41,6 +41,7 @@ export function useActions() {
       }
       toast('Não salvou.', { label: 'Tentar de novo', onClick: () => run(mutate) })
     })
+    return tx
   }
 
   const { pages, sections, statuses, tasks, settings } = source
@@ -68,8 +69,12 @@ export function useActions() {
   return {
     addPage(title: string) {
       const id = newId()
-      run(() => pages.insert({ id, title, subtitle: '', position: nextPosition(all(pages)) }))
-      run(() => statuses.insert(defaultStatuses(id)))
+      const page = run(() => pages.insert({ id, title, subtitle: '', position: nextPosition(all(pages)) }))
+      const insertStatuses = () => run(() => statuses.insert(defaultStatuses(id)))
+      // Server mode: pages and statuses are separate POSTs, and a status row has a page FK,
+      // so it must wait for the page insert to land (local mode has no such ordering constraint)
+      if (!source.slug || !page) insertStatuses()
+      else page.isPersisted.promise.then(insertStatuses, () => {})
       return id
     },
     updatePage(id: string, changes: Partial<Omit<Page, 'id'>>) {
