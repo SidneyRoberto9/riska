@@ -1,9 +1,12 @@
+import { useSearch } from '@tanstack/react-router'
 import type { ReactNode } from 'react'
 import { useApplyTheme } from '#/data/theme'
 
 export function Shell({ children }: { children: ReactNode }) {
   useApplyTheme()
-  return <div className="mx-auto max-w-[720px] px-4 pb-12">{children}</div>
+  // The board uses the whole window; everything else keeps the reading width
+  const { view } = useSearch({ strict: false }) as { view?: string }
+  return <div className={`mx-auto px-4 pb-12 ${view === 'quadro' ? 'max-w-none sm:px-6' : 'max-w-[720px]'}`}>{children}</div>
 }
 
 export function NotFound() {
