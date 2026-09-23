@@ -1,36 +1,52 @@
-import { HeadContent, Scripts, createRootRoute } from '@tanstack/react-router'
-
+import type { QueryClient } from '@tanstack/react-query'
+import { HeadContent, Outlet, Scripts, createRootRouteWithContext } from '@tanstack/react-router'
+import type { ReactNode } from 'react'
+import { ToastProvider } from '#/components/toast'
+import { localThemeScript } from '#/data/theme'
+import { themeFn } from '#/server/session'
 import appCss from '../styles.css?url'
 
-export const Route = createRootRoute({
+export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()({
+  // Theme for /s/<slug> is resolved on the server so the first paint is already themed
+  loader: async ({ location }) => {
+    const m = location.pathname.match(/^\/s\/([a-z0-9]{3,40})/)
+    return m ? await themeFn({ data: { slug: m[1] } }) : null
+  },
   head: () => ({
     meta: [
-      {
-        charSet: 'utf-8',
-      },
-      {
-        name: 'viewport',
-        content: 'width=device-width, initial-scale=1',
-      },
-      {
-        title: 'TanStack Start Starter',
-      },
+      { charSet: 'utf-8' },
+      { name: 'viewport', content: 'width=device-width, initial-scale=1, viewport-fit=cover' },
+      { title: 'Checklist' },
     ],
     links: [
       {
-        rel: 'stylesheet',
-        href: appCss,
+        rel: 'icon',
+        href: "data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>✅</text></svg>",
       },
+      { rel: 'preconnect', href: 'https://fonts.googleapis.com' },
+      { rel: 'preconnect', href: 'https://fonts.gstatic.com', crossOrigin: 'anonymous' },
+      {
+        rel: 'stylesheet',
+        href: 'https://fonts.googleapis.com/css2?family=Manrope:wght@700;800&family=IBM+Plex+Sans:wght@400;500;600&display=swap',
+      },
+      { rel: 'stylesheet', href: appCss },
     ],
   }),
   shellComponent: RootDocument,
+  component: () => (
+    <ToastProvider>
+      <Outlet />
+    </ToastProvider>
+  ),
 })
 
-function RootDocument({ children }: { children: React.ReactNode }) {
+function RootDocument({ children }: { children: ReactNode }) {
+  const theme = Route.useLoaderData()
   return (
-    <html lang="en">
+    <html lang="pt-BR" data-theme={theme?.theme ?? 'roxo'} data-mode={theme?.mode ?? 'system'} suppressHydrationWarning>
       <head>
         <HeadContent />
+        <script dangerouslySetInnerHTML={{ __html: localThemeScript }} />
       </head>
       <body>
         {children}
