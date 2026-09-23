@@ -1,7 +1,8 @@
 import { createContext, useCallback, useContext, useState, type ReactNode } from 'react'
 
-type ToastItem = { id: number; text: string; retry?: () => void }
-type Show = (text: string, retry?: () => void) => void
+type ToastAction = { label: string; onClick: () => void }
+type ToastItem = { id: number; text: string; action?: ToastAction }
+type Show = (text: string, action?: ToastAction) => void
 
 const ToastContext = createContext<Show>(() => {})
 export const useToast = () => useContext(ToastContext)
@@ -12,9 +13,9 @@ export function ToastProvider({ children }: { children: ReactNode }) {
   const [toasts, setToasts] = useState<ToastItem[]>([])
   const dismiss = useCallback((id: number) => setToasts((t) => t.filter((x) => x.id !== id)), [])
   const show = useCallback<Show>(
-    (text, retry) => {
+    (text, action) => {
       const id = ++seq
-      setToasts((t) => [...t.slice(-2), { id, text, retry }])
+      setToasts((t) => [...t.slice(-2), { id, text, action }])
       setTimeout(() => dismiss(id), 6000)
     },
     [dismiss],
@@ -30,15 +31,15 @@ export function ToastProvider({ children }: { children: ReactNode }) {
         {toasts.map((t) => (
           <div key={t.id} className="pointer-events-auto flex items-center gap-3 rounded-xl bg-ink px-4 py-2.5 text-sm text-ground shadow-lg">
             <span>{t.text}</span>
-            {t.retry && (
+            {t.action && (
               <button
-                className="font-semibold underline underline-offset-2"
+                className="-my-1 min-h-9 rounded-md px-2 font-semibold underline underline-offset-2"
                 onClick={() => {
                   dismiss(t.id)
-                  t.retry?.()
+                  t.action?.onClick()
                 }}
               >
-                Tentar de novo
+                {t.action.label}
               </button>
             )}
           </div>

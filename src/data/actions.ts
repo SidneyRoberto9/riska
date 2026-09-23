@@ -37,7 +37,7 @@ export function useActions() {
         router.invalidate()
         return
       }
-      toast('Não salvou', () => run(mutate))
+      toast('Não salvou.', { label: 'Tentar de novo', onClick: () => run(mutate) })
     })
   }
 
@@ -99,7 +99,9 @@ export function useActions() {
       run(() => tasks.update(id, (d) => void Object.assign(d, changes)))
     },
     deleteTask(id: string) {
+      const task = tasks.get(id)
       run(() => tasks.delete(id))
+      if (task) toast('Tarefa deletada.', { label: 'Desfazer', onClick: () => run(() => tasks.insert(task)) })
     },
     moveTask(sorted: Task[], id: string, dir: -1 | 1) {
       run(() => swap(tasks, sorted, id, dir))
