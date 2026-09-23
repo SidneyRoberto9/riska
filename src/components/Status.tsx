@@ -88,7 +88,7 @@ export function StatusEditor({ initial, onSave, onRemove }: { initial?: StatusDr
               Remover
             </button>
           )}
-          <button disabled={!name.trim()} className="min-h-10 rounded-lg bg-accent px-3.5 font-semibold text-surface disabled:opacity-40">
+          <button type="submit" disabled={!name.trim()} className="min-h-10 rounded-lg bg-accent px-3.5 font-semibold text-surface disabled:opacity-40">
             Salvar
           </button>
         </div>

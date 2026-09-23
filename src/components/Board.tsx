@@ -351,7 +351,7 @@ function AddCard({ status, sections }: { status: Status; sections: Section[] }) 
             ))}
           </select>
         )}
-        <button disabled={!text.trim()} className="ml-auto min-h-10 rounded-lg bg-accent px-3 text-sm font-semibold text-surface disabled:opacity-40">
+        <button type="submit" disabled={!text.trim()} className="ml-auto min-h-10 rounded-lg bg-accent px-3 text-sm font-semibold text-surface disabled:opacity-40">
           Adicionar
         </button>
         <button type="button" onClick={hide} aria-label="Fechar" className="grid size-10 place-items-center rounded-lg text-ink-soft hover:bg-accent-soft">
