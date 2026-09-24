@@ -71,7 +71,16 @@ export function ImageLightbox({
             <X size={20} aria-hidden />
           </button>
         </header>
-        <div className="relative flex min-h-0 flex-1 items-center justify-center">
+        {/* biome-ignore lint/a11y/noStaticElementInteractions: empty-area click to close mirrors the backdrop; Esc already closes the dialog */}
+        {/* biome-ignore lint/a11y/useKeyWithClickEvents: same as above, Esc already closes the dialog */}
+        <div
+          className="relative flex min-h-0 flex-1 items-center justify-center"
+          onClick={(e) => {
+            if (e.target === e.currentTarget) {
+              ref.current?.close()
+            }
+          }}
+        >
           {failed ? (
             <p className="text-white/80">Não foi possível carregar a imagem.</p>
           ) : (
