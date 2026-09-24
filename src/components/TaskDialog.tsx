@@ -50,6 +50,9 @@ export function TaskDialog({
   const assigneeId = useId()
   const [note, setNote] = useState(task.note)
   const [assignee, setAssignee] = useState(task.assignee ?? "")
+  // What the fields showed on open: only a field the user changed is written, so an edit made on another
+  // device meanwhile isn't overwritten with the stale value
+  const initial = useRef({ note: task.note, assignee: task.assignee ?? "" })
   const latest = useRef({ note, assignee, task })
   // Committed values for the blur/unmount save (not written during render)
   useLayoutEffect(() => {
@@ -60,11 +63,13 @@ export function TaskDialog({
   const save = () => {
     const { note, assignee, task } = latest.current
     const changes: { note?: string; assignee?: string } = {}
-    if (note.trim() !== task.note) {
-      changes.note = note.trim()
+    const n = note.trim()
+    if (n !== initial.current.note.trim() && n !== task.note) {
+      changes.note = n
     }
-    if (assignee.trim() !== (task.assignee ?? "")) {
-      changes.assignee = assignee.trim()
+    const who = assignee.trim()
+    if (who !== initial.current.assignee.trim() && who !== (task.assignee ?? "")) {
+      changes.assignee = who
     }
     if (changes.note !== undefined || changes.assignee !== undefined) {
       a.updateTask(task.id, changes)
