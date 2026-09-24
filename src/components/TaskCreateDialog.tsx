@@ -281,7 +281,7 @@ export function TaskCreateDialog({
             className="flex min-h-10 items-center gap-2 rounded-lg bg-accent px-4 font-semibold text-surface disabled:opacity-40"
           >
             {busy && <Loader2 size={16} aria-hidden className="animate-spin" />}
-            {createdId ? "Tentar de novo" : "Criar tarefa"}
+            {createdId && !busy ? "Tentar de novo" : "Criar tarefa"}
           </button>
         </footer>
       </form>
