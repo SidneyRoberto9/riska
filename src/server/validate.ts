@@ -68,6 +68,7 @@ export const taskFields = {
   done: bool,
   statusId: nullable(id),
   note: str(LIMITS.taskNote),
+  assignee: str(LIMITS.assignee),
   createdAt: nullable(isoDate),
   position: int,
   boardPosition: int,

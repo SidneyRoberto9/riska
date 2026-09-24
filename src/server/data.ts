@@ -53,7 +53,7 @@ export const listTasksFn = createServerFn()
     const sql = await db()
     return [
       ...(await sql<Task[]>`
-      select t.id, t.section_id, s.page_id, t.text, t.done, t.status_id, t.note,
+      select t.id, t.section_id, s.page_id, t.text, t.done, t.status_id, t.note, t.assignee,
              to_json(t.created_at) #>> '{}' as created_at, t.position, t.board_position
       from tasks t join sections s on s.id = t.section_id join pages p on p.id = s.page_id
       where p.session_slug = ${s}`),
