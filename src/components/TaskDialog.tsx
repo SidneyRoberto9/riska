@@ -240,7 +240,8 @@ export function TaskDialog({
                   <button
                     type="button"
                     onClick={() => void uploads.start({ id: task.id, pageId: task.pageId })}
-                    className="min-h-10 rounded-lg px-2 font-semibold underline underline-offset-2 hover:bg-warn-soft"
+                    disabled={uploads.busy}
+                    className="min-h-10 rounded-lg px-2 font-semibold underline underline-offset-2 hover:bg-warn-soft disabled:opacity-40"
                   >
                     Tentar de novo
                   </button>
