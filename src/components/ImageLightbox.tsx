@@ -19,12 +19,14 @@ export function ImageLightbox({
   const many = images.length > 1
   const go = (d: number) => {
     setFailed(false)
-    setI((x) => (x + d + images.length) % images.length)
+    setI((x) => (Math.min(x, images.length - 1) + d + images.length) % images.length)
   }
   useEffect(() => {
     ref.current?.showModal()
   }, [])
-  const img = images[i]
+  // Clamped: an image deleted while shown (e.g. on another device) falls back to the last one
+  const at = Math.min(i, images.length - 1)
+  const img = images[at]
   if (!img) {
     return null
   }
@@ -32,7 +34,7 @@ export function ImageLightbox({
   return (
     <dialog
       ref={ref}
-      aria-label={`Imagem ${i + 1} de ${images.length}: ${img.name}`}
+      aria-label={`Imagem ${at + 1} de ${images.length}: ${img.name}`}
       onClose={onClose}
       onKeyDown={(e) => {
         if (many && e.key === "ArrowLeft") {
@@ -61,7 +63,7 @@ export function ImageLightbox({
       <div className="flex size-full flex-col">
         <header className="flex items-center gap-3 px-2 py-2">
           <span className="text-sm tabular-nums text-white/80">
-            {i + 1} / {images.length}
+            {at + 1} / {images.length}
           </span>
           <span className="min-w-0 flex-1 truncate text-sm">{img.name}</span>
           <a href={img.src} target="_blank" rel="noopener" className={NAV} aria-label="Abrir original">

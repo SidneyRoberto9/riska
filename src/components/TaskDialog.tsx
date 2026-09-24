@@ -59,6 +59,10 @@ export function TaskDialog({
     latest.current = { note, assignee, task }
   })
   const failed = uploads.items.some((u) => u.state === "error")
+  // The viewed image was deleted (here or on another device): drop the lightbox
+  if (viewing !== null && viewing >= attachments.length) {
+    setViewing(null)
+  }
 
   const save = () => {
     const { note, assignee, task } = latest.current
@@ -262,6 +266,7 @@ export function TaskDialog({
       </div>
       {viewing !== null && (
         <ImageLightbox
+          key={viewing}
           images={attachments.map((x) => ({ src: imageSrc(slug, x.id), name: x.name }))}
           index={viewing}
           onClose={() => {
