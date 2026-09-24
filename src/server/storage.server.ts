@@ -34,8 +34,10 @@ async function presign(method: "GET" | "PUT", key: string, seconds: number, head
   return signed.url
 }
 
-export const presignPut = (key: string, contentType: string) =>
-  presign("PUT", key, 300, { "Content-Type": contentType })
+// Content-Length is signed too: without it the URL would accept any body size up to 300s after issuing,
+// letting a small approved upload be replaced by an oversized one before insertAttachmentsFn's HEAD check
+export const presignPut = (key: string, contentType: string, size: number) =>
+  presign("PUT", key, 300, { "Content-Type": contentType, "Content-Length": String(size) })
 export const presignGet = (key: string) => presign("GET", key, 3600)
 
 export async function headObject(key: string): Promise<{ size: number; contentType: string } | null> {

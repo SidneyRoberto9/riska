@@ -32,7 +32,7 @@ export const createUploadFn = createServerFn({ method: "POST" })
       invalid()
     }
     const attachmentId = newId()
-    return { id: attachmentId, url: await presignPut(objectKey(s, attachmentId), data.contentType) }
+    return { id: attachmentId, url: await presignPut(objectKey(s, attachmentId), data.contentType, data.size) }
   })
 
 export const insertAttachmentsFn = createServerFn({ method: "POST" })
