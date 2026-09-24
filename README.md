@@ -31,8 +31,11 @@ right now, gone the moment you clear your browser.
   columns (`@dnd-kit`), touch and mouse alike.
 - **Custom statuses** — each page defines its own kanban columns (name,
   color, done flag), not a fixed to-do/doing/done set.
-- **Task notes** — a longer free-text note per task, separate from its
-  title.
+- **Task details** — a short title (120 characters), a longer
+  description and a **responsável** per task, created through a "Nova
+  tarefa" modal in both views.
+- **Images** — attach screenshots to a task in a session (pick or paste),
+  stored in a private Cloudflare R2 bucket; opens in a lightbox.
 - **Voice dictation** — dictate a task with the Web Speech API where the
   browser supports it; the button disappears where it doesn't.
 - **Themes** — 6 accent colors × light/dark/system mode, persisted per
@@ -78,7 +81,8 @@ an inconsistent position.
 | `pages`     | `title`, `subtitle`, `position`                                          |
 | `sections`  | `page_id`, `title`, `note`, `highlight`, `position`                      |
 | `statuses`  | `page_id`, `name`, `color`, `done`, `position` — a page's kanban columns  |
-| `tasks`     | `section_id`, `status_id`, `text`, `note`, `done`, `position` (list order), `board_position` (kanban order) |
+| `tasks`     | `section_id`, `status_id`, `text`, `note`, `assignee`, `done`, `position` (list order), `board_position` (kanban order) |
+| `attachments` | `task_id`, `key` (R2 object key, never sent to the client), `name`, `content_type`, `size`, `position` |
 
 Migrations (`src/server/schema.sql`) run idempotently on the first database
 query of each server process (retried on the next request if they fail),
@@ -94,6 +98,10 @@ board existed.
   slug can never be used to inject a path or query.
 - Local mode never touches the network — nothing about it is exposed to the
   server.
+- Images live in a private bucket; the browser uploads with a short-lived
+  presigned PUT bound to the file's type and size, the server re-checks the
+  stored object, and images are served through a cookie-checked route that
+  redirects to a short-lived presigned GET (ADR 0010).
 
 ## Testing
 
@@ -123,6 +131,21 @@ Before opening a PR: `npm run lint && npm run typecheck && npm test && npm run b
 | --------------- | ------------------------------------------------------- |
 | `DATABASE_URL`  | Postgres connection string                              |
 | `COOKIE_SECRET` | Session cookie signing secret — generate with `node -e "console.log(require('crypto').randomBytes(32).toString('base64url'))"` |
+| `R2_ACCOUNT_ID`, `R2_ACCESS_KEY_ID`, `R2_SECRET_ACCESS_KEY`, `R2_BUCKET` | Optional — image attachments; leave empty to hide the image field |
+
+`vite.config.ts` has a dev-only plugin that rewrites `Sec-Fetch-Dest` on
+`/api/` requests: Nitro's dev server would otherwise answer the image
+route (`<img src="/api/...">`) as a missing static file.
+
+### Image storage (Cloudflare R2)
+
+1. Create a **private** R2 bucket and keep its **Public Development URL
+   (`r2.dev`) disabled** — images must only be reachable through the app.
+2. Create an R2 API token with **Object Read & Write**, scoped to that
+   bucket only.
+3. Put the four `R2_*` values in `.env` (never commit them).
+4. Allow browser uploads from your origins:
+   `node --env-file=.env scripts/r2-cors.ts https://your.domain http://localhost:3000`
 
 ## Documentation
 
