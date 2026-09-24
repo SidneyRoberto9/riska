@@ -2,31 +2,12 @@ import { Trash2, X } from "lucide-react"
 import { useEffect, useId, useLayoutEffect, useRef, useState } from "react"
 import { useActions } from "#/data/actions"
 import { statusOf } from "#/lib/status"
+import { formatDate, relative } from "#/lib/time"
 import { LIMITS, type Section, type Status, type Task } from "#/lib/types"
 import { InlineEdit } from "./InlineEdit"
 import { StatusChip } from "./StatusChip"
 import { StatusPicker } from "./StatusPicker"
 import { VoiceButton } from "./VoiceButton"
-
-const dateFmt = new Intl.DateTimeFormat("pt-BR", { dateStyle: "medium", timeStyle: "short" })
-const relFmt = new Intl.RelativeTimeFormat("pt-BR", { numeric: "auto" })
-const UNITS: [Intl.RelativeTimeFormatUnit, number][] = [
-  ["year", 31_536_000],
-  ["month", 2_592_000],
-  ["day", 86_400],
-  ["hour", 3_600],
-  ["minute", 60],
-]
-
-function relative(iso: string) {
-  const s = (new Date(iso).getTime() - Date.now()) / 1000
-  for (const [unit, n] of UNITS) {
-    if (Math.abs(s) >= n) {
-      return relFmt.format(Math.round(s / n), unit)
-    }
-  }
-  return "agora"
-}
 
 // Every way of closing (X, Esc, backdrop) goes through dialog.close() → onClose; the note is saved on blur and on unmount
 export function TaskDialog({
@@ -146,7 +127,7 @@ export function TaskDialog({
               <>
                 <dt className="text-ink-soft">Criada</dt>
                 <dd className="m-0">
-                  <time dateTime={task.createdAt}>{dateFmt.format(new Date(task.createdAt))}</time>
+                  <time dateTime={task.createdAt}>{formatDate(task.createdAt)}</time>
                   <span className="text-ink-soft"> · {relative(task.createdAt)}</span>
                 </dd>
               </>
