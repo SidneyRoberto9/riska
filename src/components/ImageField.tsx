@@ -24,6 +24,14 @@ export function ImageField({
 }) {
   const input = useRef<HTMLInputElement>(null)
   const [over, setOver] = useState(false)
+  // A just-added image is shown before its row reaches the server, so the first load can 404: retry a few times
+  const [retries, setRetries] = useState<Record<string, number>>({})
+  const retry = (id: string) => {
+    const n = retries[id] ?? 0
+    if (n < 3) {
+      setTimeout(() => setRetries((r) => ({ ...r, [id]: n + 1 })), 1500)
+    }
+  }
   return (
     <div className="grid grid-cols-[repeat(auto-fill,minmax(88px,1fr))] gap-2">
       {attachments.map((att, i) => (
@@ -34,7 +42,13 @@ export function ImageField({
             aria-label={`Ver imagem ${att.name}`}
             className="size-full"
           >
-            <img src={imageSrc(slug, att.id)} alt="" loading="lazy" className="size-full object-cover" />
+            <img
+              src={`${imageSrc(slug, att.id)}${retries[att.id] ? `?r=${retries[att.id]}` : ""}`}
+              alt=""
+              loading="lazy"
+              onError={() => retry(att.id)}
+              className="size-full object-cover"
+            />
           </button>
           {onRemove && (
             <button
