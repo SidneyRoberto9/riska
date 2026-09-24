@@ -33,6 +33,19 @@ Use GitHub's private vulnerability reporting for this repository
 - **Inline theme script** (`src/routes/__root.tsx`, `src/data/theme.ts`) —
   a static string run before hydration on `/local` pages; it reads the
   saved theme from `localStorage` and only sets two `data-*` attributes.
+- **Image attachments** (`src/server/attachments.ts`,
+  `src/server/storage.server.ts`, `src/routes/api.s.$slug.img.$id.ts`) —
+  private Cloudflare R2 bucket, keys `<slug>/<server-made id>` never sent
+  to the client. Uploads use a 5-minute presigned PUT that signs
+  `Content-Type` and `Content-Length`; the server HEADs the object and
+  rejects (and deletes) anything that isn't PNG/JPEG/WebP/GIF/AVIF
+  ≤ 10 MB, and caps 20 images per task under a row lock. No SVG. Reads go
+  through a route that checks the session cookie and the row's session,
+  then 302s to a 1-hour presigned GET; everything else is a 404. The
+  bucket's public `r2.dev` URL must stay disabled, and the `R2_*`
+  credentials should be a token limited to that one bucket. Removed images'
+  objects are not deleted (so undo works); a presigned GET already handed
+  out stays valid until it expires.
 - **Local mode** — data is stored in plain `localStorage`
   (`checklist-local-*`), unencrypted and readable by anything that can run
   script on the origin. It never reaches the server.
