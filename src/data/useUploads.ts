@@ -87,8 +87,11 @@ export function useUploads() {
         position: nextPosition(existing),
       })
       drop(u.key)
-    } catch {
+    } catch (err) {
       patch(u.key, { state: "error" })
+      if ((err as Error)?.message === "INVALID_IMAGE") {
+        toast("Imagem inválida.")
+      }
       if (!mounted.current) {
         toast(`${u.file.name}: não foi enviada.`)
       }
