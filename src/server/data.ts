@@ -11,7 +11,7 @@ import {
   shape,
   slug,
   statusFields,
-  taskFields,
+  taskInsertFields,
   taskUpdateFields,
 } from "./validate"
 
@@ -184,7 +184,7 @@ export const deleteStatusesFn = createServerFn({ method: "POST" })
 // ---- tasks -------------------------------------------------------------
 
 export const insertTasksFn = createServerFn({ method: "POST" })
-  .validator(shape({ slug, items: arr(shape({ id, sectionId: id, ...taskFields })) }))
+  .validator(shape({ slug, items: arr(shape({ id, sectionId: id, ...taskInsertFields })) }))
   .handler(async ({ data }) => {
     const s = await requireAccess(data.slug)
     const sql = await db()

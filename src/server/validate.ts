@@ -1,6 +1,6 @@
-import { ID_RE, PIN_RE, SLUG_RE } from "#/lib/id"
-import { IMAGE_TYPES } from "#/lib/images"
-import { LIMITS, MODES, THEMES } from "#/lib/types"
+import { ID_RE, PIN_RE, SLUG_RE } from "../lib/id.ts"
+import { IMAGE_TYPES } from "../lib/images.ts"
+import { LIMITS, MODES, THEMES } from "../lib/types.ts"
 
 type Check<T> = (v: unknown) => T
 type Shape = Record<string, Check<unknown>>
@@ -35,6 +35,11 @@ export const nullable =
   <T>(f: Check<T>): Check<T | null> =>
   (v) =>
     v === null ? null : f(v)
+// A field older clients don't send (a tab opened before a deploy): missing becomes the fallback
+export const optional =
+  <T>(f: Check<T>, fallback: T): Check<T> =>
+  (v) =>
+    v === undefined ? fallback : f(v)
 export const isoDate: Check<string> = (v) =>
   typeof v === "string" && v.length <= 40 && !Number.isNaN(Date.parse(v)) ? v : invalid()
 
@@ -74,6 +79,8 @@ export const taskFields = {
   position: int,
   boardPosition: int,
 }
+// assignee is newer than some open tabs: an insert without it (new task, undo of a delete) still goes through
+export const taskInsertFields = { ...taskFields, assignee: optional(taskFields.assignee, "") }
 // Moving a task between sections (list drag-and-drop) is update-only
 export const taskUpdateFields = { ...taskFields, sectionId: id }
 
