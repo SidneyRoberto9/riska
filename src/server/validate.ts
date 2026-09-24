@@ -1,4 +1,5 @@
 import { ID_RE, PIN_RE, SLUG_RE } from "#/lib/id"
+import { IMAGE_TYPES } from "#/lib/images"
 import { LIMITS, MODES, THEMES } from "#/lib/types"
 
 type Check<T> = (v: unknown) => T
@@ -75,3 +76,6 @@ export const taskFields = {
 }
 // Moving a task between sections (list drag-and-drop) is update-only
 export const taskUpdateFields = { ...taskFields, sectionId: id }
+
+export const imageType = oneOf(IMAGE_TYPES)
+export const attachmentFields = { name: str(LIMITS.fileName), contentType: imageType, size: int, position: int }

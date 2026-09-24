@@ -74,3 +74,16 @@ END $$;
 ALTER TABLE tasks DROP COLUMN IF EXISTS badges;
 
 ALTER TABLE tasks ADD COLUMN IF NOT EXISTS assignee text NOT NULL DEFAULT '';
+
+-- Image attachments; the object lives in R2 at `key` (<slug>/<id>). Deleting a task drops its rows, not the objects.
+CREATE TABLE IF NOT EXISTS attachments (
+  id           text PRIMARY KEY,
+  task_id      text NOT NULL REFERENCES tasks ON DELETE CASCADE,
+  key          text NOT NULL,
+  name         text NOT NULL,
+  content_type text NOT NULL,
+  size         int  NOT NULL,
+  position     int  NOT NULL,
+  created_at   timestamptz NOT NULL DEFAULT now()
+);
+CREATE INDEX IF NOT EXISTS attachments_task_idx ON attachments (task_id);
