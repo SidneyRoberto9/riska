@@ -10,6 +10,7 @@ import { LIMITS, type Section, type Status } from "#/lib/types"
 import { AssigneeInput } from "./AssigneeInput"
 import { ColumnChips } from "./ColumnChips"
 import { FIELD, LABEL } from "./fieldStyles"
+import { fileDrop } from "./fileDrop"
 import { ImageField } from "./ImageField"
 import { useToast } from "./ToastProvider"
 import { useBlockEscape } from "./useBlockEscape"
@@ -128,6 +129,7 @@ export function TaskCreateDialog({
           uploads.add(files, 0)
         }
       }}
+      {...fileDrop(images ? (f) => uploads.add(f, 0) : undefined)}
       onPointerDown={(e) => {
         downOnBackdrop.current = e.target === ref.current
       }}

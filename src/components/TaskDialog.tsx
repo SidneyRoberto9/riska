@@ -12,6 +12,7 @@ import { type Attachment, LIMITS, type Section, type Status, type Task } from "#
 import { AssigneeInput } from "./AssigneeInput"
 import { ColumnChips } from "./ColumnChips"
 import { FIELD } from "./fieldStyles"
+import { fileDrop } from "./fileDrop"
 import { ImageField } from "./ImageField"
 import { ImageLightbox } from "./ImageLightbox"
 import { InlineEdit } from "./InlineEdit"
@@ -112,6 +113,7 @@ export function TaskDialog({
           addFiles(files)
         }
       }}
+      {...fileDrop(images && viewing === null ? addFiles : undefined)}
       onPointerDown={(e) => {
         downOnBackdrop.current = e.target === ref.current
       }}
