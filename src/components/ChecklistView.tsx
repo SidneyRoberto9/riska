@@ -92,7 +92,7 @@ export function ChecklistView({ pageId, view, taskId }: { pageId: string; view?:
       setSearch({ task: undefined }, { replace: true })
     }
   }
-  const dialogTask = view === "quadro" && taskId ? tasks.find((t) => t.id === taskId) : undefined
+  const dialogTask = taskId ? tasks.find((t) => t.id === taskId) : undefined
 
   // biome-ignore lint/correctness/useExhaustiveDependencies: closeTask reads refs and the URL, re-running on its identity would close twice
   useEffect(() => {
@@ -220,6 +220,8 @@ export function ChecklistView({ pageId, view, taskId }: { pageId: string; view?:
                           siblings={sections}
                           taskById={taskById}
                           statuses={statuses}
+                          imageCounts={imageCounts}
+                          onOpen={openTask}
                           onNew={setCreating}
                         />
                       )

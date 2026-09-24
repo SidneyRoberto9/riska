@@ -17,6 +17,8 @@ export function SectionCard({
   siblings,
   taskById,
   statuses,
+  imageCounts,
+  onOpen,
   onNew,
 }: {
   section: Section
@@ -24,6 +26,8 @@ export function SectionCard({
   siblings: Section[]
   taskById: Map<string, Task>
   statuses: Status[]
+  imageCounts: Map<string, number>
+  onOpen: (id: string) => void
   onNew: (target: NewTaskTarget) => void
 }) {
   const a = useActions()
@@ -142,7 +146,14 @@ export function SectionCard({
           return (
             <>
               {tasks.map((t) => (
-                <TaskRow key={t.id} task={t} siblings={tasks} statuses={statuses} />
+                <TaskRow
+                  key={t.id}
+                  task={t}
+                  siblings={tasks}
+                  statuses={statuses}
+                  images={imageCounts.get(t.id) ?? 0}
+                  onOpen={onOpen}
+                />
               ))}
               <NewTaskButton onClick={() => onNew({ sectionId: section.id })} />
             </>

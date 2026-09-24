@@ -1,24 +1,35 @@
-import { ArrowDown, ArrowUp, CircleDot, GripVertical, StickyNote, Trash2 } from "lucide-react"
+import { ArrowDown, ArrowUp, CircleDot, GripVertical, Trash2 } from "lucide-react"
 import { useState } from "react"
 import { useActions } from "#/data/actions"
 import { chipHidden, statusOf } from "#/lib/status"
-import { LIMITS, type Status, type Task } from "#/lib/types"
+import type { Status, Task } from "#/lib/types"
 import { useSortableItem } from "./dnd"
-import { InlineEdit } from "./InlineEdit"
 import { Menu } from "./Menu"
 import { MenuItem } from "./MenuItem"
 import { StatusChip } from "./StatusChip"
 import { StatusOptions } from "./StatusOptions"
 import { StatusPicker } from "./StatusPicker"
+import { TaskMeta } from "./TaskMeta"
 
-export function TaskRow({ task, siblings, statuses }: { task: Task; siblings: Task[]; statuses: Status[] }) {
+export function TaskRow({
+  task,
+  siblings,
+  statuses,
+  images,
+  onOpen,
+}: {
+  task: Task
+  siblings: Task[]
+  statuses: Status[]
+  images: number
+  onOpen: (id: string) => void
+}) {
   const { setNodeRef, setActivatorNodeRef, attributes, listeners, style, isDragging } = useSortableItem(
     task.id,
     "tarefa arrastável"
   )
   const a = useActions()
   const [menu, setMenu] = useState<"actions" | "status">("actions")
-  const [editingNote, setEditingNote] = useState(false)
   const i = siblings.findIndex((t) => t.id === task.id)
   const status = statusOf(task, statuses)
 
@@ -48,41 +59,31 @@ export function TaskRow({ task, siblings, statuses }: { task: Task; siblings: Ta
         />
       </label>
       <div className="ml-1 min-w-0 flex-1 text-[0.92rem] leading-[1.42]">
-        <InlineEdit
-          value={task.text}
-          required
-          multiline
-          maxLength={LIMITS.task}
-          label="Texto da tarefa"
-          onSave={(text) => a.updateTask(task.id, { text })}
-          className={task.done ? "text-ink-soft line-through decoration-ink-soft/40" : ""}
-        />
-        {status && !chipHidden(task, statuses) && (
-          <StatusPicker
-            task={task}
-            statuses={statuses}
-            trigger={(p) => (
-              <StatusChip {...p} status={status} aria-label={`Status: ${status.name}. Alterar`} className="ml-1.5" />
-            )}
-          />
-        )}
-        {(task.note || editingNote) && (
-          <div className="mt-0.5 text-[0.82rem] leading-snug text-ink-soft">
-            <InlineEdit
-              key={String(editingNote)}
-              value={task.note}
-              multiline
-              placeholder="Nota da tarefa…"
-              label="Nota da tarefa"
-              maxLength={LIMITS.taskNote}
-              startEditing={editingNote}
-              onDone={() => setEditingNote(false)}
-              onSave={(note) => a.updateTask(task.id, { note })}
-              voice="Ditar nota"
-              viewClassName="block line-clamp-2"
+        <div className="flex items-start gap-1.5">
+          <button
+            type="button"
+            onClick={() => onOpen(task.id)}
+            aria-haspopup="dialog"
+            className={`w-full min-w-0 cursor-pointer text-left break-words line-clamp-2 hover:text-accent ${task.done ? "text-ink-soft line-through decoration-ink-soft/40" : ""}`}
+          >
+            {task.text}
+          </button>
+          {status && !chipHidden(task, statuses) && (
+            <StatusPicker
+              task={task}
+              statuses={statuses}
+              trigger={(p) => (
+                <StatusChip
+                  {...p}
+                  status={status}
+                  aria-label={`Status: ${status.name}. Alterar`}
+                  className="mt-0.5 shrink-0"
+                />
+              )}
             />
-          </div>
-        )}
+          )}
+        </div>
+        <TaskMeta assignee={task.assignee ?? ""} images={images} note={!!task.note} className="mt-0.5" />
       </div>
       <Menu label="Ações da tarefa" quiet onClose={() => setMenu("actions")}>
         {(close) =>
@@ -112,15 +113,6 @@ export function TaskRow({ task, siblings, statuses }: { task: Task; siblings: Ta
               </MenuItem>
               <MenuItem icon={CircleDot} onClick={() => setMenu("status")}>
                 Status{status ? `: ${status.name}` : ""}
-              </MenuItem>
-              <MenuItem
-                icon={StickyNote}
-                onClick={() => {
-                  setEditingNote(true)
-                  close()
-                }}
-              >
-                {task.note ? "Editar nota" : "Adicionar nota"}
               </MenuItem>
               <MenuItem
                 icon={Trash2}
