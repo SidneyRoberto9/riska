@@ -11,6 +11,7 @@ import { ColumnChips } from "./ColumnChips"
 import { FIELD, LABEL } from "./fieldStyles"
 import { ImageField } from "./ImageField"
 import { useToast } from "./ToastProvider"
+import { useBlockEscape } from "./useBlockEscape"
 import { VoiceButton } from "./VoiceButton"
 
 export type NewTaskTarget = { sectionId?: string; statusId?: string }
@@ -97,6 +98,8 @@ export function TaskCreateDialog({
     }
     ref.current?.close()
   }
+
+  useBlockEscape(busy)
 
   return (
     // biome-ignore lint/a11y/useKeyWithClickEvents: backdrop click to close, Esc is handled natively by <dialog>
