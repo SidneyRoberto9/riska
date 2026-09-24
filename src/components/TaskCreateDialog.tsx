@@ -5,6 +5,7 @@ import { useImagesEnabled } from "#/data/images"
 import { readLastSection, writeLastSection } from "#/data/lastSection"
 import { useSource } from "#/data/source-context"
 import { useUploads } from "#/data/useUploads"
+import { pastedImages } from "#/lib/images"
 import { LIMITS, type Section, type Status } from "#/lib/types"
 import { AssigneeInput } from "./AssigneeInput"
 import { ColumnChips } from "./ColumnChips"
@@ -121,9 +122,10 @@ export function TaskCreateDialog({
         onClose()
       }}
       onPaste={(e) => {
-        if (images && e.clipboardData.files.length) {
+        const files = pastedImages(e.target as HTMLElement, e.clipboardData)
+        if (images && files.length) {
           e.preventDefault()
-          uploads.add([...e.clipboardData.files], 0)
+          uploads.add(files, 0)
         }
       }}
       onPointerDown={(e) => {

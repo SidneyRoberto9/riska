@@ -18,3 +18,16 @@ export function checkImage(type: string, size: number): "type" | "size" | null {
   }
   return null
 }
+
+// Files to upload from a paste, or none. Office apps put an image/png next to the text they copy, so a
+// paste with text into a text field stays a text paste.
+export function pastedImages(
+  target: { tagName?: string; isContentEditable?: boolean } | null,
+  data: { types: readonly string[]; files: ArrayLike<File> }
+): File[] {
+  const textField = target?.tagName === "INPUT" || target?.tagName === "TEXTAREA" || target?.isContentEditable === true
+  if (textField && data.types.includes("text/plain")) {
+    return []
+  }
+  return Array.from(data.files)
+}

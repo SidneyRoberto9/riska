@@ -4,6 +4,7 @@ import { useActions } from "#/data/actions"
 import { imageSrc, useImagesEnabled } from "#/data/images"
 import { useSource } from "#/data/source-context"
 import { useUploads } from "#/data/useUploads"
+import { pastedImages } from "#/lib/images"
 import { statusOf } from "#/lib/status"
 import { titleMax } from "#/lib/task"
 import { formatDate, relative } from "#/lib/time"
@@ -93,9 +94,10 @@ export function TaskDialog({
         }
       }}
       onPaste={(e) => {
-        if (images && viewing === null && e.clipboardData.files.length > 0) {
+        const files = pastedImages(e.target as HTMLElement, e.clipboardData)
+        if (images && viewing === null && files.length > 0) {
           e.preventDefault()
-          addFiles([...e.clipboardData.files])
+          addFiles(files)
         }
       }}
       onPointerDown={(e) => {
