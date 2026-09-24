@@ -63,6 +63,8 @@ export function TaskCreateDialog({
   const busy = saving || uploads.busy
   // The optimistic insert can fail and roll back: then a retry creates the task again
   const created = createdId !== null && source.tasks.has(createdId)
+  const attached = created ? [...source.attachments.values()].filter((x) => x.taskId === createdId).length : 0
+  const addImages = (files: File[]) => uploads.add(files, attached)
 
   useEffect(() => {
     ref.current?.showModal()
@@ -127,10 +129,10 @@ export function TaskCreateDialog({
         const files = pastedImages(e.target as HTMLElement, e.clipboardData)
         if (images && files.length) {
           e.preventDefault()
-          uploads.add(files, 0)
+          addImages(files)
         }
       }}
-      {...fileDrop(images ? (f) => uploads.add(f, 0) : undefined)}
+      {...fileDrop(images ? addImages : undefined)}
       onPointerDown={(e) => {
         downOnBackdrop.current = e.target === ref.current
       }}
@@ -261,7 +263,7 @@ export function TaskCreateDialog({
                 slug={source.slug ?? ""}
                 attachments={[]}
                 uploads={uploads}
-                onFiles={(f) => uploads.add(f, 0)}
+                onFiles={addImages}
                 onOpen={() => {}}
               />
               <p className="m-0 mt-1.5 text-xs text-ink-soft">
