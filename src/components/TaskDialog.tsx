@@ -79,6 +79,8 @@ export function TaskDialog({
     if (changes.note !== undefined || changes.assignee !== undefined) {
       a.updateTask(task.id, changes)
     }
+    // The shown values are now in sync: a later edit from another device isn't overwritten by the next blur
+    initial.current = { note: n, assignee: who }
   }
 
   const addFiles = (files: File[]) => {
