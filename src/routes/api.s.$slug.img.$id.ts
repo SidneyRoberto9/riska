@@ -24,7 +24,11 @@ export const Route = createFileRoute("/api/s/$slug/img/$id")({
         }
         return new Response(null, {
           status: 302,
-          headers: { Location: await presignGet(row.key), "Cache-Control": "private, max-age=3000" },
+          headers: {
+            Location: await presignGet(row.key),
+            "Cache-Control": "private, max-age=3000",
+            "X-Content-Type-Options": "nosniff",
+          },
         })
       },
     },
