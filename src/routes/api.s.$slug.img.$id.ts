@@ -2,7 +2,7 @@ import { createFileRoute } from "@tanstack/react-router"
 import { ID_RE } from "#/lib/id"
 import { hasAccess } from "#/server/auth.server"
 import { db } from "#/server/db.server"
-import { presignGet } from "#/server/storage.server"
+import { presignGet, storageEnabled } from "#/server/storage.server"
 
 const notFound = () => new Response(null, { status: 404 })
 
@@ -11,7 +11,7 @@ export const Route = createFileRoute("/api/s/$slug/img/$id")({
   server: {
     handlers: {
       GET: async ({ params }) => {
-        if (!ID_RE.test(params.id) || !(await hasAccess(params.slug))) {
+        if (!storageEnabled() || !ID_RE.test(params.id) || !(await hasAccess(params.slug))) {
           return notFound()
         }
         const sql = await db()
