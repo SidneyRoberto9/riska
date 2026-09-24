@@ -1,52 +1,84 @@
 import { Trash2, X } from "lucide-react"
 import { useEffect, useId, useLayoutEffect, useRef, useState } from "react"
 import { useActions } from "#/data/actions"
+import { imageSrc, useImagesEnabled } from "#/data/images"
+import { useSource } from "#/data/source-context"
+import { useUploads } from "#/data/useUploads"
 import { statusOf } from "#/lib/status"
+import { titleMax } from "#/lib/task"
 import { formatDate, relative } from "#/lib/time"
-import { LIMITS, type Section, type Status, type Task } from "#/lib/types"
+import { type Attachment, LIMITS, type Section, type Status, type Task } from "#/lib/types"
+import { AssigneeInput } from "./AssigneeInput"
+import { ColumnChips } from "./ColumnChips"
+import { FIELD } from "./fieldStyles"
+import { ImageField } from "./ImageField"
+import { ImageLightbox } from "./ImageLightbox"
 import { InlineEdit } from "./InlineEdit"
-import { StatusChip } from "./StatusChip"
-import { StatusPicker } from "./StatusPicker"
 import { VoiceButton } from "./VoiceButton"
 
-// Every way of closing (X, Esc, backdrop) goes through dialog.close() → onClose; the note is saved on blur and on unmount
+// Every way of closing (X, Esc, backdrop) goes through dialog.close() → onClose; note and assignee are saved
+// on blur and on unmount. Closing while images upload is fine: the uploader keeps going and inserts the rows.
 export function TaskDialog({
   task,
   statuses,
   section,
+  assignees,
+  attachments,
   onClose,
 }: {
   task: Task
   statuses: Status[]
   section?: Section
+  assignees: string[]
+  attachments: Attachment[]
   onClose: () => void
 }) {
   const a = useActions()
+  const source = useSource()
+  const slug = source.slug ?? ""
+  const images = useImagesEnabled()
+  const uploads = useUploads()
+  const [viewing, setViewing] = useState<number | null>(null)
+  // The thumbnail that opened the lightbox gets focus back when it closes
+  const opener = useRef<HTMLElement | null>(null)
   const ref = useRef<HTMLDialogElement>(null)
   // Backdrop close needs press and release on the backdrop: a text selection dragged out of the dialog doesn't count
   const downOnBackdrop = useRef(false)
   const titleId = useId()
   const noteId = useId()
+  const assigneeId = useId()
   const [note, setNote] = useState(task.note)
-  const latest = useRef({ note, task })
+  const [assignee, setAssignee] = useState(task.assignee ?? "")
+  const latest = useRef({ note, assignee, task })
   // Committed values for the blur/unmount save (not written during render)
   useLayoutEffect(() => {
-    latest.current = { note, task }
+    latest.current = { note, assignee, task }
   })
-  const status = statusOf(task, statuses)
+  const failed = uploads.items.some((u) => u.state === "error")
 
-  const saveNote = () => {
-    const { note, task } = latest.current
-    const v = note.trim()
-    if (v !== task.note) {
-      a.updateTask(task.id, { note: v })
+  const save = () => {
+    const { note, assignee, task } = latest.current
+    const changes: { note?: string; assignee?: string } = {}
+    if (note.trim() !== task.note) {
+      changes.note = note.trim()
+    }
+    if (assignee.trim() !== (task.assignee ?? "")) {
+      changes.assignee = assignee.trim()
+    }
+    if (changes.note !== undefined || changes.assignee !== undefined) {
+      a.updateTask(task.id, changes)
     }
   }
 
-  // biome-ignore lint/correctness/useExhaustiveDependencies: open once on mount, save the latest note (via ref) on unmount
+  const addFiles = (files: File[]) => {
+    uploads.add(files, attachments.length)
+    void uploads.start({ id: task.id, pageId: task.pageId })
+  }
+
+  // biome-ignore lint/correctness/useExhaustiveDependencies: open once on mount, save the latest values (via ref) on unmount
   useEffect(() => {
     ref.current?.showModal()
-    return saveNote
+    return save
   }, [])
 
   return (
@@ -54,7 +86,18 @@ export function TaskDialog({
     <dialog
       ref={ref}
       aria-labelledby={titleId}
-      onClose={onClose}
+      // The lightbox is a nested <dialog>: its close event reaches this handler through React, ignore it
+      onClose={(e) => {
+        if (e.target === e.currentTarget) {
+          onClose()
+        }
+      }}
+      onPaste={(e) => {
+        if (images && viewing === null && e.clipboardData.files.length > 0) {
+          e.preventDefault()
+          addFiles([...e.clipboardData.files])
+        }
+      }}
       onPointerDown={(e) => {
         downOnBackdrop.current = e.target === ref.current
       }}
@@ -76,12 +119,12 @@ export function TaskDialog({
               aria-label="Concluída"
             />
           </label>
-          <h2 id={titleId} className="m-0 min-w-0 flex-1 text-[1.15rem] leading-snug font-bold">
+          <h2 id={titleId} className="m-0 min-w-0 flex-1 text-base leading-snug font-semibold">
             <InlineEdit
               value={task.text}
               required
               multiline
-              maxLength={LIMITS.task}
+              maxLength={titleMax(task.text)}
               label="Título da tarefa"
               voice="Ditar título"
               onSave={(text) => a.updateTask(task.id, { text })}
@@ -99,34 +142,37 @@ export function TaskDialog({
         </header>
 
         <div className="flex-1 space-y-5 overflow-x-hidden overflow-y-auto overscroll-contain p-4">
-          <dl className="m-0 grid grid-cols-[auto_1fr] items-center gap-x-5 gap-y-2.5 text-sm">
-            <dt className="text-ink-soft">Status</dt>
-            <dd className="m-0">
-              {status && (
-                <StatusPicker
-                  task={task}
-                  statuses={statuses}
-                  trigger={(p) => (
-                    <StatusChip
-                      {...p}
-                      status={status}
-                      aria-label={`Status: ${status.name}. Alterar`}
-                      className="px-2 py-0.5 text-[0.75rem]"
-                    />
-                  )}
-                />
-              )}
+          <dl className="m-0 grid grid-cols-[auto_1fr] items-start gap-x-5 gap-y-2.5 text-sm">
+            <dt className="pt-2 text-ink-soft">Coluna</dt>
+            <dd className="m-0 min-w-0">
+              <ColumnChips
+                statuses={statuses}
+                value={statusOf(task, statuses)?.id}
+                onChange={(s) => a.setTaskStatus(task, s)}
+              />
+            </dd>
+            <dt className="pt-2 text-ink-soft">
+              <label htmlFor={assigneeId}>Responsável</label>
+            </dt>
+            <dd className="m-0 min-w-0">
+              <AssigneeInput
+                id={assigneeId}
+                value={assignee}
+                onChange={setAssignee}
+                onBlur={save}
+                options={assignees}
+              />
             </dd>
             {section && (
               <>
-                <dt className="text-ink-soft">Seção</dt>
-                <dd className="m-0">{section.title}</dd>
+                <dt className="pt-2 text-ink-soft">Seção</dt>
+                <dd className="m-0 pt-2">{section.title}</dd>
               </>
             )}
             {task.createdAt && (
               <>
-                <dt className="text-ink-soft">Criada</dt>
-                <dd className="m-0">
+                <dt className="pt-2 text-ink-soft">Criada</dt>
+                <dd className="m-0 pt-2">
                   <time dateTime={task.createdAt}>{formatDate(task.createdAt)}</time>
                   <span className="text-ink-soft"> · {relative(task.createdAt)}</span>
                 </dd>
@@ -145,10 +191,10 @@ export function TaskDialog({
               id={noteId}
               value={note}
               onChange={(e) => setNote(e.target.value)}
-              onBlur={saveNote}
+              onBlur={save}
               maxLength={LIMITS.taskNote}
               placeholder="Adicione uma descrição…"
-              className="block min-h-28 w-full resize-none rounded-xl border border-line bg-ground p-3 text-[0.92rem] leading-relaxed field-sizing-content focus-visible:border-accent focus-visible:outline-offset-0"
+              className={`${FIELD} min-h-28 resize-none leading-relaxed field-sizing-content`}
             />
             {note.length > LIMITS.taskNote - 200 && (
               <p className="m-0 mt-1 text-right text-xs tabular-nums text-ink-soft">
@@ -156,6 +202,41 @@ export function TaskDialog({
               </p>
             )}
           </div>
+
+          {images && (
+            <div>
+              <h3 className="m-0 mb-1.5 text-sm font-semibold">
+                Imagens{" "}
+                {attachments.length > 0 && <span className="font-normal text-ink-soft">({attachments.length})</span>}
+              </h3>
+              <ImageField
+                slug={slug}
+                attachments={attachments}
+                uploads={uploads}
+                onFiles={addFiles}
+                onOpen={(i) => {
+                  opener.current = document.activeElement as HTMLElement
+                  setViewing(i)
+                }}
+                onRemove={a.removeAttachment}
+              />
+              <p className="m-0 mt-1.5 text-xs text-ink-soft">
+                Arraste, cole (Ctrl+V) ou clique. PNG, JPEG, WebP, GIF ou AVIF até 10 MB.
+              </p>
+              {failed && (
+                <p role="alert" className="m-0 mt-1.5 flex items-center gap-2 text-sm text-warn">
+                  Algumas imagens falharam.
+                  <button
+                    type="button"
+                    onClick={() => void uploads.start({ id: task.id, pageId: task.pageId })}
+                    className="min-h-10 rounded-lg px-2 font-semibold underline underline-offset-2 hover:bg-warn-soft"
+                  >
+                    Tentar de novo
+                  </button>
+                </p>
+              )}
+            </div>
+          )}
         </div>
 
         <footer className="flex justify-end border-t border-line p-3">
@@ -172,6 +253,16 @@ export function TaskDialog({
           </button>
         </footer>
       </div>
+      {viewing !== null && (
+        <ImageLightbox
+          images={attachments.map((x) => ({ src: imageSrc(slug, x.id), name: x.name }))}
+          index={viewing}
+          onClose={() => {
+            setViewing(null)
+            opener.current?.focus()
+          }}
+        />
+      )}
     </dialog>
   )
 }

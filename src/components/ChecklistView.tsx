@@ -52,6 +52,14 @@ export function ChecklistView({ pageId, view, taskId }: { pageId: string; view?:
         .orderBy(({ s }) => s.position),
     [source, pageId]
   )
+  const { data: attachments } = useLiveQuery(
+    (q) =>
+      q
+        .from({ x: source.attachments })
+        .where(({ x }) => eq(x.pageId, pageId))
+        .orderBy(({ x }) => x.position),
+    [source, pageId]
+  )
 
   // Local mode only: pages saved before statuses existed get the defaults once
   // biome-ignore lint/correctness/useExhaustiveDependencies: `a` is rebuilt every render and pages[0].id is pageId, so this runs once per loaded page
@@ -228,6 +236,8 @@ export function ChecklistView({ pageId, view, taskId }: { pageId: string; view?:
           task={dialogTask}
           statuses={statuses}
           section={sections.find((s) => s.id === dialogTask.sectionId)}
+          assignees={assignees}
+          attachments={attachments.filter((x) => x.taskId === dialogTask.id)}
           onClose={closeTask}
         />
       )}
