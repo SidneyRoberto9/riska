@@ -16,13 +16,16 @@ export function BoardCardFace({ task, sectionTitle, images }: { task: Task; sect
         </p>
         <span aria-hidden className="-my-1.5 size-10 shrink-0" />
       </div>
-      <TaskMeta
-        section={sectionTitle}
-        assignee={task.assignee ?? ""}
-        images={images}
-        note={!!task.note}
-        className="mt-1.5 pl-7"
-      />
+      {/* The drag overlay duplicates the card: keep its meta labels away from screen readers */}
+      <div aria-hidden>
+        <TaskMeta
+          section={sectionTitle}
+          assignee={task.assignee ?? ""}
+          images={images}
+          note={!!task.note}
+          className="mt-1.5 pl-7"
+        />
+      </div>
     </div>
   )
 }
