@@ -7,7 +7,8 @@ import { useSortableColumn } from "./dnd"
 import { InlineEdit } from "./InlineEdit"
 import { Menu } from "./Menu"
 import { MenuItem } from "./MenuItem"
-import { NewTaskInput } from "./NewTaskInput"
+import { NewTaskButton } from "./NewTaskButton"
+import type { NewTaskTarget } from "./TaskCreateDialog"
 import { TaskRow } from "./TaskRow"
 
 export function SectionCard({
@@ -16,12 +17,14 @@ export function SectionCard({
   siblings,
   taskById,
   statuses,
+  onNew,
 }: {
   section: Section
   index: number
   siblings: Section[]
   taskById: Map<string, Task>
   statuses: Status[]
+  onNew: (target: NewTaskTarget) => void
 }) {
   const a = useActions()
   const [editingNote, setEditingNote] = useState(false)
@@ -141,7 +144,7 @@ export function SectionCard({
               {tasks.map((t) => (
                 <TaskRow key={t.id} task={t} siblings={tasks} statuses={statuses} />
               ))}
-              <NewTaskInput section={section} />
+              <NewTaskButton onClick={() => onNew({ sectionId: section.id })} />
             </>
           )
         }}

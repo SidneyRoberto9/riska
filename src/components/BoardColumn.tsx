@@ -2,7 +2,7 @@ import { ArrowLeft, ArrowRight, CheckCheck, GripVertical, Palette, Trash2 } from
 import { useState } from "react"
 import { useActions } from "#/data/actions"
 import { neighbour } from "#/lib/status"
-import { LIMITS, type Section, type Status, type Task } from "#/lib/types"
+import { LIMITS, type Status, type Task } from "#/lib/types"
 import { BoardAddCard } from "./BoardAddCard"
 import { BoardCard } from "./BoardCard"
 import { COLUMN_MAX_H, COLUMN_W } from "./boardStyles"
@@ -12,21 +12,22 @@ import { InlineEdit } from "./InlineEdit"
 import { Menu } from "./Menu"
 import { MenuItem } from "./MenuItem"
 import { StatusEditor } from "./StatusEditor"
+import type { NewTaskTarget } from "./TaskCreateDialog"
 
 export function BoardColumn({
   status,
   statuses,
-  sections,
   byId,
   sectionTitle,
   onOpen,
+  onNew,
 }: {
   status: Status
   statuses: Status[]
-  sections: Section[]
   byId: Map<string, Task>
   sectionTitle: Map<string, string> | null
   onOpen: (taskId: string) => void
+  onNew: (target: NewTaskTarget) => void
 }) {
   const a = useActions()
   const [editing, setEditing] = useState(false)
@@ -157,7 +158,7 @@ export function BoardColumn({
           })
         }
       </ColumnItems>
-      <BoardAddCard status={status} sections={sections} />
+      <BoardAddCard status={status} onNew={onNew} />
     </section>
   )
 }

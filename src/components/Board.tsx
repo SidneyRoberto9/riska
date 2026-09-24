@@ -8,6 +8,7 @@ import { BoardNewColumn } from "./BoardNewColumn"
 import { DragPreview } from "./DragPreview"
 import { SortableBoard } from "./SortableBoard"
 import { SortableColumns } from "./SortableColumns"
+import type { NewTaskTarget } from "./TaskCreateDialog"
 import { useDragScroll } from "./useDragScroll"
 
 export function Board({
@@ -16,12 +17,14 @@ export function Board({
   sections,
   tasks,
   onOpen,
+  onNew,
 }: {
   pageId: string
   statuses: Status[]
   sections: Section[]
   tasks: Task[]
   onOpen: (taskId: string) => void
+  onNew: (target: NewTaskTarget) => void
 }) {
   const a = useActions()
   const setSearch = useSetPageSearch()
@@ -98,10 +101,10 @@ export function Board({
                     key={id}
                     status={s}
                     statuses={statuses}
-                    sections={sections}
                     byId={byId}
                     sectionTitle={sectionTitle}
                     onOpen={onOpen}
+                    onNew={onNew}
                   />
                 )
               )

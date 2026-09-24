@@ -1,10 +1,11 @@
 import { eq, useLiveQuery } from "@tanstack/react-db"
 import { useRouter } from "@tanstack/react-router"
 import { ChevronLeft } from "lucide-react"
-import { useEffect, useRef } from "react"
+import { useEffect, useRef, useState } from "react"
 import { useActions } from "#/data/actions"
 import { useSetPageSearch } from "#/data/page-search"
 import { useSource } from "#/data/source-context"
+import { assigneesOf } from "#/lib/task"
 import { LIMITS, type Task } from "#/lib/types"
 import { Board } from "./Board"
 import { DragPreview } from "./DragPreview"
@@ -15,12 +16,14 @@ import { ProgressBar } from "./ProgressBar"
 import { SectionCard } from "./SectionCard"
 import { SortableBoard } from "./SortableBoard"
 import { SortableColumns } from "./SortableColumns"
+import { type NewTaskTarget, TaskCreateDialog } from "./TaskCreateDialog"
 import { TaskDialog } from "./TaskDialog"
 import { ViewToggle } from "./ViewToggle"
 
 export function ChecklistView({ pageId, view, taskId }: { pageId: string; view?: "quadro"; taskId?: string }) {
   const source = useSource()
   const a = useActions()
+  const [creating, setCreating] = useState<NewTaskTarget | null>(null)
   const { data: pages, isReady } = useLiveQuery(
     (q) => q.from({ p: source.pages }).where(({ p }) => eq(p.id, pageId)),
     [source, pageId]
@@ -116,6 +119,7 @@ export function ChecklistView({ pageId, view, taskId }: { pageId: string; view?:
   }
   const taskById = new Map(tasks.map((t) => [t.id, t]))
   const sectionById = new Map(sections.map((s) => [s.id, s]))
+  const assignees = assigneesOf(tasks)
   const done = tasks.filter((t) => t.done).length
 
   return (
@@ -156,7 +160,14 @@ export function ChecklistView({ pageId, view, taskId }: { pageId: string; view?:
       </header>
       <main>
         {view === "quadro" ? (
-          <Board pageId={page.id} statuses={statuses} sections={sections} tasks={tasks} onOpen={openTask} />
+          <Board
+            pageId={page.id}
+            statuses={statuses}
+            sections={sections}
+            tasks={tasks}
+            onOpen={openTask}
+            onNew={setCreating}
+          />
         ) : (
           <>
             {sections.length === 0 && (
@@ -196,6 +207,7 @@ export function ChecklistView({ pageId, view, taskId }: { pageId: string; view?:
                           siblings={sections}
                           taskById={taskById}
                           statuses={statuses}
+                          onNew={setCreating}
                         />
                       )
                     )
@@ -217,6 +229,16 @@ export function ChecklistView({ pageId, view, taskId }: { pageId: string; view?:
           statuses={statuses}
           section={sections.find((s) => s.id === dialogTask.sectionId)}
           onClose={closeTask}
+        />
+      )}
+      {creating && (
+        <TaskCreateDialog
+          pageId={page.id}
+          sections={sections}
+          statuses={statuses}
+          assignees={assignees}
+          initial={creating}
+          onClose={() => setCreating(null)}
         />
       )}
     </>
