@@ -29,7 +29,7 @@ export function ColumnChips({
             />
             <span
               style={on ? tint(s.color) : undefined}
-              className={`flex min-h-9 items-center gap-1.5 rounded-full border px-3 text-[0.8rem] font-semibold peer-focus-visible:outline-2 peer-focus-visible:outline-offset-2 peer-focus-visible:outline-accent ${on ? "border-transparent" : "border-line text-ink-soft hover:border-ink-soft"}`}
+              className={`flex min-h-10 items-center gap-1.5 rounded-full border px-3 text-[0.8rem] font-semibold peer-focus-visible:outline-2 peer-focus-visible:outline-offset-2 peer-focus-visible:outline-accent ${on ? "border-transparent" : "border-line text-ink-soft hover:border-ink-soft"}`}
             >
               <span aria-hidden className="size-2 rounded-full" style={{ background: s.color }} />
               {s.name}

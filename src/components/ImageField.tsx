@@ -36,7 +36,7 @@ export function ImageField({
               type="button"
               onClick={() => onRemove(att)}
               aria-label={`Remover imagem ${att.name}`}
-              className="absolute top-1 right-1 grid size-8 place-items-center rounded-full bg-black/60 text-white opacity-100 hover:bg-black/80 [@media(hover:hover)]:opacity-0 [@media(hover:hover)]:group-hover:opacity-100 [@media(hover:hover)]:focus-visible:opacity-100"
+              className="absolute top-1 right-1 grid size-10 place-items-center rounded-full bg-black/60 text-white opacity-100 hover:bg-black/80 [@media(hover:hover)]:opacity-0 [@media(hover:hover)]:group-hover:opacity-100 [@media(hover:hover)]:focus-visible:opacity-100"
             >
               <X size={15} aria-hidden />
             </button>
@@ -65,7 +65,7 @@ export function ImageField({
               type="button"
               onClick={() => uploads.remove(u.key)}
               aria-label={`Tirar ${u.file.name}`}
-              className="absolute top-1 right-1 grid size-8 place-items-center rounded-full bg-black/60 text-white hover:bg-black/80"
+              className="absolute top-1 right-1 grid size-10 place-items-center rounded-full bg-black/60 text-white hover:bg-black/80"
             >
               <X size={15} aria-hidden />
             </button>
