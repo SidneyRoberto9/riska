@@ -61,7 +61,8 @@ export function TaskCreateDialog({
   // Covers the whole submit, not just the moments an item is marked "uploading"
   const [saving, setSaving] = useState(false)
   const busy = saving || uploads.busy
-  const created = createdId !== null
+  // The optimistic insert can fail and roll back: then a retry creates the task again
+  const created = createdId !== null && source.tasks.has(createdId)
 
   useEffect(() => {
     ref.current?.showModal()
@@ -81,7 +82,7 @@ export function TaskCreateDialog({
     }
     // A retry after a failed image must not create the task twice
     const id =
-      createdId ??
+      (created && createdId) ||
       a.addTask({
         section,
         text,
@@ -117,7 +118,7 @@ export function TaskCreateDialog({
         if (e.target !== e.currentTarget) {
           return
         }
-        if (createdId && uploads.items.length) {
+        if (created && uploads.items.length) {
           toast("Tarefa criada sem algumas imagens.")
         }
         onClose()
@@ -285,7 +286,7 @@ export function TaskCreateDialog({
             className="flex min-h-10 items-center gap-2 rounded-lg bg-accent px-4 font-semibold text-surface disabled:opacity-40"
           >
             {busy && <Loader2 size={16} aria-hidden className="animate-spin" />}
-            {createdId && !busy ? "Tentar de novo" : "Criar tarefa"}
+            {created && !busy ? "Tentar de novo" : "Criar tarefa"}
           </button>
         </footer>
       </form>
