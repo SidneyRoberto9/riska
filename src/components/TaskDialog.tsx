@@ -221,8 +221,8 @@ export function TaskDialog({
                 attachments={attachments}
                 uploads={uploads}
                 onFiles={addFiles}
-                onOpen={(i) => {
-                  opener.current = document.activeElement as HTMLElement
+                onOpen={(i, el) => {
+                  opener.current = el ?? null
                   setViewing(i)
                 }}
                 onRemove={a.removeAttachment}

@@ -19,7 +19,7 @@ export function ImageField({
   attachments: Attachment[]
   uploads: ReturnType<typeof useUploads>
   onFiles: (files: File[]) => void
-  onOpen: (index: number) => void
+  onOpen: (index: number, el?: HTMLElement) => void
   onRemove?: (att: Attachment) => void
 }) {
   const input = useRef<HTMLInputElement>(null)
@@ -28,7 +28,12 @@ export function ImageField({
     <div className="grid grid-cols-[repeat(auto-fill,minmax(88px,1fr))] gap-2">
       {attachments.map((att, i) => (
         <div key={att.id} className={`group ${TILE}`}>
-          <button type="button" onClick={() => onOpen(i)} aria-label={`Ver imagem ${att.name}`} className="size-full">
+          <button
+            type="button"
+            onClick={(e) => onOpen(i, e.currentTarget)}
+            aria-label={`Ver imagem ${att.name}`}
+            className="size-full"
+          >
             <img src={imageSrc(slug, att.id)} alt="" loading="lazy" className="size-full object-cover" />
           </button>
           {onRemove && (
