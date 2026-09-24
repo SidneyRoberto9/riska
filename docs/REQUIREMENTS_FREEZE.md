@@ -22,20 +22,33 @@ in an ADR when it's architectural).
 ## Content model
 
 - Pages → sections → tasks. Sections have a note and a highlight flag;
-  tasks have text, a done flag, a status, a note and a creation date.
+  tasks have a title, a done flag, a status, a description (the `note`
+  column), a **responsável** (free text) and a creation date. In a session
+  a task can also have **images** (PNG, JPEG, WebP, GIF, AVIF; ≤ 10 MB
+  each, ≤ 20 per task; no SVG) stored in a private R2 bucket (ADR 0010).
+  Local mode has no images.
 - Each page owns its statuses (the board columns). New pages get
   **A Fazer**, **Em Andamento**, **Concluído** (the last marked done).
   Colors come from a fixed palette of 8.
-- Limits (`LIMITS` in `src/lib/types.ts`): titles 200, section notes 500,
-  task text 1000, task notes 2000, status names 30 characters.
+- Limits (`LIMITS` in `src/lib/types.ts`): page/section titles 200,
+  section notes 500, task titles 120 when typed (longer titles created
+  before this limit are kept and stay editable; the server still accepts
+  1000), task descriptions 2000, responsável 80, image names 200, status
+  names 30 characters.
 
 ## Views
 
 - Two views of the same tasks per page: **Lista** (sections, checklist
   order) and **Quadro** (kanban by status, `?view=quadro`). A task keeps a
   separate order in each.
-- Task details open in a dialog from the board, addressable by URL
-  (`?task=<id>`).
+- New tasks are created through a modal in both views (**Título**,
+  **Descrição**, **Responsável**, **Coluna** chips, **Seção**, **Imagens**
+  in sessions). "Adicionar tarefa" in a board column preselects that
+  column. The modal can't be closed while images are uploading.
+- Task details open in a dialog from a board card or a list row's title,
+  addressable by URL (`?task=<id>`). The column is switched with chips.
+- Rows and cards show a meta line: responsável, image count, and an icon
+  when the task has a description.
 - Drag-and-drop in both views, by mouse, touch (long-press) and keyboard.
 
 ## Sync
@@ -58,4 +71,6 @@ in an ADR when it's architectural).
 - Single Node process (TanStack Start / Nitro output) + PostgreSQL.
 - Docker image built on `node:24-alpine` (`npm ci`, `npm run build`), runs
   as the `node` user on port 3000.
-- Configuration: `DATABASE_URL`, `COOKIE_SECRET` (≥ 32 chars).
+- Configuration: `DATABASE_URL`, `COOKIE_SECRET` (≥ 32 chars), and
+  optionally `R2_ACCOUNT_ID`, `R2_ACCESS_KEY_ID`, `R2_SECRET_ACCESS_KEY`,
+  `R2_BUCKET` (images are hidden without them).
