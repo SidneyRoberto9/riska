@@ -17,7 +17,16 @@ export type Mode = (typeof MODES)[number]["id"]
 
 export const STATUS_COLORS = ["#dc2626", "#ea580c", "#d97706", "#16a34a", "#2563eb", "#7c3aed", "#db2777", "#6b7280"]
 
-export const LIMITS = { title: 200, note: 500, task: 1000, taskNote: 2000, statusName: 30 }
+export const LIMITS = {
+  title: 200,
+  note: 500,
+  task: 1000,
+  taskTitle: 120,
+  taskNote: 2000,
+  statusName: 30,
+  assignee: 80,
+  fileName: 200,
+}
 
 export type Page = { id: string; title: string; subtitle: string; position: number }
 export type Section = { id: string; pageId: string; title: string; note: string; highlight: boolean; position: number }
@@ -34,9 +43,21 @@ export type Task = {
   done: boolean
   statusId: string | null
   note: string
+  assignee: string
   createdAt: string | null
   position: number
   boardPosition: number
+}
+
+// pageId is derived server-side from the task (not a column), like Task.pageId. The R2 key never reaches the client.
+export type Attachment = {
+  id: string
+  taskId: string
+  pageId: string
+  name: string
+  contentType: string
+  size: number
+  position: number
 }
 export type Settings = { id: "settings"; theme: ThemeId; mode: Mode }
 
