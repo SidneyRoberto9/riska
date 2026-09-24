@@ -53,8 +53,25 @@ PT-BR name for screen readers.
 - Content max width `1440px`, centered, `px-4` (`sm:px-6`) gutters.
 - Board columns `min(85vw, 300px)` wide, scrolling horizontally with no
   visible scrollbar; the side with more columns fades out via a mask.
-- Task dialog: centered modal on desktop, bottom sheet at ≤ 640px
-  (respecting the safe-area inset).
+- Task dialogs (`.task-dialog`: details and "Nova tarefa"): centered
+  modal `min(640px, 100vw − 32px)` wide on desktop, bottom sheet at
+  ≤ 640px (respecting the safe-area inset).
+- Image lightbox: a separate modal `<dialog>` styled with Tailwind only,
+  `96vw × 96dvh`, transparent over a `bg-black/85` backdrop, image
+  `object-contain`; ←/→ keys, arrow buttons and a 50px horizontal swipe
+  move between images, Esc/backdrop close it and focus returns to the
+  thumbnail.
+- Image thumbnails: square tiles in a `repeat(auto-fill, minmax(88px, 1fr))`
+  grid, remove button `size-10`.
+
+## Task fields
+
+- **Column chips** (`ColumnChips`): one pill radio per status, `min-h-10`,
+  a color dot plus the name; the selected one takes the status tint.
+- **Meta line** (`TaskMeta`) under a task title on rows and cards,
+  `0.75rem` `ink-soft`: `UserRound` + responsável, `Image` + count,
+  `StickyNote` when there is a description (lucide, 13px; each has
+  screen-reader text).
 
 ## Hit targets
 
