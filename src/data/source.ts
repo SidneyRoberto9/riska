@@ -1,7 +1,8 @@
 import { queryCollectionOptions } from "@tanstack/query-db-collection"
 import { type Collection, createCollection, localStorageCollectionOptions } from "@tanstack/react-db"
 import type { QueryClient } from "@tanstack/react-query"
-import type { Page, Section, Settings, Status, Task } from "#/lib/types"
+import type { Attachment, Page, Section, Settings, Status, Task } from "#/lib/types"
+import { deleteAttachmentsFn, insertAttachmentsFn, listAttachmentsFn } from "#/server/attachments"
 import {
   deletePagesFn,
   deleteSectionsFn,
@@ -30,6 +31,7 @@ export type Source = {
   statuses: Collection<Status, string>
   tasks: Collection<Task, string>
   settings: Collection<Settings, string>
+  attachments: Collection<Attachment, string>
 }
 
 type Fn<I> = (opts: { data: I }) => Promise<unknown>
@@ -42,6 +44,7 @@ export const queryKeys = {
   statuses: (slug: string) => ["statuses", slug],
   tasks: (slug: string) => ["tasks", slug],
   settings: (slug: string) => ["settings", slug],
+  attachments: (slug: string) => ["attachments", slug],
 }
 
 export const listFns = {
@@ -50,6 +53,7 @@ export const listFns = {
   statuses: listStatusesFn,
   tasks: listTasksFn,
   settings: getSettingsFn,
+  attachments: listAttachmentsFn,
 }
 
 function serverCollection<T extends { id: string }>(
@@ -58,7 +62,7 @@ function serverCollection<T extends { id: string }>(
   name: keyof typeof queryKeys,
   fns: {
     insert?: Fn<{ slug: string; items: T[] }>
-    update: Fn<{ slug: string; items: { id: string; changes: Partial<T> }[] }>
+    update?: Fn<{ slug: string; items: { id: string; changes: Partial<T> }[] }>
     remove?: Fn<{ slug: string; ids: string[] }>
   },
   serial: Serial
@@ -77,8 +81,8 @@ function serverCollection<T extends { id: string }>(
         await serial(async () => fns.insert?.({ data: { slug, items: transaction.mutations.map((m) => m.modified) } }))
       },
       onUpdate: async ({ transaction }) => {
-        await serial(() =>
-          fns.update({
+        await serial(async () =>
+          fns.update?.({
             data: { slug, items: transaction.mutations.map((m) => ({ id: m.key as string, changes: m.changes })) },
           })
         )
@@ -144,6 +148,13 @@ export function getServerSource(qc: QueryClient, slug: string): Source {
         },
         serial
       ),
+      attachments: serverCollection<Attachment>(
+        qc,
+        slug,
+        "attachments",
+        { insert: insertAttachmentsFn, remove: deleteAttachmentsFn },
+        serial
+      ),
     }
     serverSources.set(slug, source)
   }
@@ -175,6 +186,8 @@ export function getLocalSource(): Source {
     statuses: localCollection<Status>("statuses"),
     tasks: localCollection<Task>("tasks"),
     settings: localCollection<Settings>("settings"),
+    // never written locally: local mode never shows images
+    attachments: localCollection<Attachment>("attachments"),
   }
   return localSource
 }

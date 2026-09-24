@@ -20,7 +20,7 @@ export function BoardAddCard({ status, sections }: { status: Status; sections: S
     if (!v) {
       return
     }
-    a.addTask(section, v, status)
+    a.addTask({ section, text: v, status })
     setText("")
     input.current?.focus()
   }

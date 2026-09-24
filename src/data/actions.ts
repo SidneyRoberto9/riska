@@ -6,6 +6,7 @@ import { nextPosition, shift } from "#/lib/order"
 import { doneChanges, statusChanges, statusOf } from "#/lib/status"
 import type { Page, Section, Settings, Status, Task } from "#/lib/types"
 import { DEFAULT_SETTINGS, DEFAULT_STATUSES } from "#/lib/types"
+import { attachmentActions } from "./attachmentActions"
 import { reorderTx } from "./reorder"
 import type { Source } from "./source"
 import { useSource } from "./source-context"
@@ -17,6 +18,7 @@ export type ActionContext = {
   run: Run
   all: <T extends object>(c: Collection<T, string>) => T[]
   pageStatuses: (pageId: string) => Status[]
+  toast: ReturnType<typeof useToast>
 }
 
 export function useActions() {
@@ -35,7 +37,7 @@ export function useActions() {
     })
   }
 
-  const { pages, sections, statuses, tasks, settings } = source
+  const { pages, sections, statuses, tasks, settings, attachments } = source
   const all = <T extends object>(c: Collection<T, string>) => [...c.values()]
   const pageStatuses = (pageId: string) =>
     all(statuses)
@@ -61,10 +63,11 @@ export function useActions() {
     run(() => tasks.update(task.id, (d) => void Object.assign(d, changes, extra)))
   }
 
-  const context: ActionContext = { source, run, all, pageStatuses }
+  const context: ActionContext = { source, run, all, pageStatuses, toast }
 
   return {
     ...statusActions(context),
+    ...attachmentActions(context),
     addPage(title: string) {
       const id = newId()
       run(() => pages.insert({ id, title, subtitle: "", position: nextPosition(all(pages)) }))
@@ -148,15 +151,29 @@ export function useActions() {
       run(() => reorderTx(sections, ids, "position"))
     },
 
-    addTask(section: Section, text: string, status?: Status) {
+    addTask({
+      section,
+      text,
+      note = "",
+      assignee = "",
+      status,
+    }: {
+      section: Section
+      text: string
+      note?: string
+      assignee?: string
+      status?: Status
+    }) {
+      const id = newId()
       const siblings = all(tasks).filter((t) => t.sectionId === section.id)
       run(() =>
         tasks.insert({
-          id: newId(),
+          id,
           sectionId: section.id,
           pageId: section.pageId,
           text,
-          note: "",
+          note,
+          assignee,
           statusId: status?.id ?? null,
           done: status?.done ?? false,
           createdAt: new Date().toISOString(),
@@ -164,9 +181,10 @@ export function useActions() {
           boardPosition: boardEnd(section.pageId),
         })
       )
+      return id
     },
     // Guarded: an inline edit can blur after another device deleted the task
-    updateTask(id: string, changes: Partial<Pick<Task, "text" | "note">>) {
+    updateTask(id: string, changes: Partial<Pick<Task, "text" | "note" | "assignee">>) {
       if (tasks.has(id)) {
         run(() => tasks.update(id, (d) => void Object.assign(d, changes)))
       }
@@ -179,9 +197,21 @@ export function useActions() {
     },
     deleteTask(id: string) {
       const task = tasks.get(id)
+      const images = all(attachments).filter((x) => x.taskId === id)
+      if (images.length) {
+        run(() => attachments.delete(images.map((x) => x.id)))
+      }
       run(() => tasks.delete(id))
       if (task) {
-        toast("Tarefa deletada.", { label: "Desfazer", onClick: () => run(() => tasks.insert(task)) })
+        toast("Tarefa deletada.", {
+          label: "Desfazer",
+          onClick: () => {
+            run(() => tasks.insert(task))
+            if (images.length) {
+              run(() => attachments.insert(images))
+            }
+          },
+        })
       }
     },
     moveTask(sorted: Task[], id: string, dir: -1 | 1) {
@@ -207,7 +237,22 @@ export function useActions() {
     },
     // localStorage pages from before statuses existed: add the defaults and fill the new task fields, once
     upgradeLocalPage(pageId: string) {
-      if (source.slug || all(statuses).some((s) => s.pageId === pageId)) {
+      if (source.slug) {
+        return
+      }
+      const noAssignee = all(tasks).filter((t) => t.pageId === pageId && t.assignee === undefined)
+      if (noAssignee.length) {
+        run(() =>
+          tasks.update(
+            noAssignee.map((t) => t.id),
+            (ds) =>
+              ds.forEach((d) => {
+                d.assignee = ""
+              })
+          )
+        )
+      }
+      if (all(statuses).some((s) => s.pageId === pageId)) {
         return
       }
       const defaults = defaultStatuses(pageId)

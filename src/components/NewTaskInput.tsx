@@ -13,7 +13,7 @@ export function NewTaskInput({ section }: { section: Section }) {
     if (!v) {
       return
     }
-    a.addTask(section, v)
+    a.addTask({ section, text: v })
     setText("")
   }
   return (
