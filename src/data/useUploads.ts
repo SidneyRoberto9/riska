@@ -42,6 +42,8 @@ export function useUploads() {
   const toast = useToast()
   const items = useRef<Upload[]>([])
   const running = useRef<Promise<boolean> | null>(null)
+  // Uploads outlive the task dialog; once it's gone a failure has no tile left to show it, so it's toasted
+  const mounted = useRef(true)
   const [, render] = useReducer((n: number) => n + 1, 0)
   const set = (next: Upload[]) => {
     items.current = next
@@ -57,13 +59,15 @@ export function useUploads() {
     set(items.current.filter((x) => x.key !== key))
   }
 
-  useEffect(
-    () => () =>
+  useEffect(() => {
+    mounted.current = true
+    return () => {
+      mounted.current = false
       items.current.forEach((u) => {
         URL.revokeObjectURL(u.preview)
-      }),
-    []
-  )
+      })
+    }
+  }, [])
 
   const send = async (u: Upload, task: { id: string; pageId: string }) => {
     patch(u.key, { state: "uploading", progress: 0 })
@@ -85,6 +89,9 @@ export function useUploads() {
       drop(u.key)
     } catch {
       patch(u.key, { state: "error" })
+      if (!mounted.current) {
+        toast(`${u.file.name}: não foi enviada.`)
+      }
     }
   }
 

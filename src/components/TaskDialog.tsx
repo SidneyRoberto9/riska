@@ -18,7 +18,8 @@ import { InlineEdit } from "./InlineEdit"
 import { VoiceButton } from "./VoiceButton"
 
 // Every way of closing (X, Esc, backdrop) goes through dialog.close() → onClose; note and assignee are saved
-// on blur and on unmount. Closing while images upload is fine: the uploader keeps going and inserts the rows.
+// on blur and on unmount. Closing while images upload is fine: the uploader keeps going and inserts the rows,
+// and an image that then fails is reported by a toast.
 export function TaskDialog({
   task,
   statuses,
