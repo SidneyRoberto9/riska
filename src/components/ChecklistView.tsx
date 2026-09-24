@@ -128,6 +128,10 @@ export function ChecklistView({ pageId, view, taskId }: { pageId: string; view?:
   const taskById = new Map(tasks.map((t) => [t.id, t]))
   const sectionById = new Map(sections.map((s) => [s.id, s]))
   const assignees = assigneesOf(tasks)
+  const imageCounts = new Map<string, number>()
+  for (const x of attachments) {
+    imageCounts.set(x.taskId, (imageCounts.get(x.taskId) ?? 0) + 1)
+  }
   const done = tasks.filter((t) => t.done).length
 
   return (
@@ -173,6 +177,7 @@ export function ChecklistView({ pageId, view, taskId }: { pageId: string; view?:
             statuses={statuses}
             sections={sections}
             tasks={tasks}
+            imageCounts={imageCounts}
             onOpen={openTask}
             onNew={setCreating}
           />

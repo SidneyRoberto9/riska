@@ -1,4 +1,4 @@
-import { CircleDot, StickyNote, Trash2 } from "lucide-react"
+import { CircleDot, Trash2 } from "lucide-react"
 import { useState } from "react"
 import { useActions } from "#/data/actions"
 import type { Status, Task } from "#/lib/types"
@@ -6,16 +6,19 @@ import { dragFrom, useClickGuard, useSortableItem } from "./dnd"
 import { Menu } from "./Menu"
 import { MenuItem } from "./MenuItem"
 import { StatusOptions } from "./StatusOptions"
+import { TaskMeta } from "./TaskMeta"
 
 export function BoardCard({
   task,
   statuses,
   sectionTitle,
+  images,
   onOpen,
 }: {
   task: Task
   statuses: Status[]
   sectionTitle?: string
+  images: number
   onOpen: (id: string) => void
 }) {
   const a = useActions()
@@ -56,7 +59,7 @@ export function BoardCard({
           ref={setActivatorNodeRef}
           {...attributes}
           aria-haspopup="dialog"
-          className={`min-w-0 flex-1 cursor-pointer text-left text-[0.9rem] leading-snug break-words line-clamp-3 ${task.done ? "text-ink-soft line-through decoration-ink-soft/40" : ""}`}
+          className={`min-w-0 flex-1 cursor-pointer text-left text-[0.9rem] leading-snug break-words line-clamp-2 ${task.done ? "text-ink-soft line-through decoration-ink-soft/40" : ""}`}
         >
           {task.text}
         </button>
@@ -86,12 +89,13 @@ export function BoardCard({
           </Menu>
         </span>
       </div>
-      {(sectionTitle || task.note) && (
-        <div className="mt-1.5 flex items-center gap-2 pl-7 text-[0.75rem] text-ink-soft">
-          {sectionTitle && <span className="min-w-0 truncate">{sectionTitle}</span>}
-          {task.note && <StickyNote size={13} role="img" aria-label="Tem descrição" className="shrink-0" />}
-        </div>
-      )}
+      <TaskMeta
+        section={sectionTitle}
+        assignee={task.assignee ?? ""}
+        images={images}
+        note={!!task.note}
+        className="mt-1.5 pl-7"
+      />
     </article>
   )
 }

@@ -19,6 +19,7 @@ export function BoardColumn({
   statuses,
   byId,
   sectionTitle,
+  imageCounts,
   onOpen,
   onNew,
 }: {
@@ -26,6 +27,7 @@ export function BoardColumn({
   statuses: Status[]
   byId: Map<string, Task>
   sectionTitle: Map<string, string> | null
+  imageCounts: Map<string, number>
   onOpen: (taskId: string) => void
   onNew: (target: NewTaskTarget) => void
 }) {
@@ -151,6 +153,7 @@ export function BoardColumn({
                   task={t}
                   statuses={statuses}
                   sectionTitle={sectionTitle?.get(t.sectionId)}
+                  images={imageCounts.get(t.id) ?? 0}
                   onOpen={onOpen}
                 />
               )

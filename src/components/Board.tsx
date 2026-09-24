@@ -16,6 +16,7 @@ export function Board({
   statuses,
   sections,
   tasks,
+  imageCounts,
   onOpen,
   onNew,
 }: {
@@ -23,6 +24,7 @@ export function Board({
   statuses: Status[]
   sections: Section[]
   tasks: Task[]
+  imageCounts: Map<string, number>
   onOpen: (taskId: string) => void
   onNew: (target: NewTaskTarget) => void
 }) {
@@ -78,7 +80,15 @@ export function Board({
       renderOverlay={(kind, id) => {
         const t = byId.get(id)
         if (kind === "item") {
-          return t && <BoardCardFace task={t} sectionTitle={sectionTitle?.get(t.sectionId)} />
+          return (
+            t && (
+              <BoardCardFace
+                task={t}
+                sectionTitle={sectionTitle?.get(t.sectionId)}
+                images={imageCounts.get(t.id) ?? 0}
+              />
+            )
+          )
         }
         return <DragPreview strong>{statusById.get(id)?.name}</DragPreview>
       }}
@@ -103,6 +113,7 @@ export function Board({
                     statuses={statuses}
                     byId={byId}
                     sectionTitle={sectionTitle}
+                    imageCounts={imageCounts}
                     onOpen={onOpen}
                     onNew={onNew}
                   />
