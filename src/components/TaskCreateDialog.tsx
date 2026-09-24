@@ -107,7 +107,7 @@ export function TaskCreateDialog({
   useBlockEscape(busy)
 
   return (
-    // biome-ignore lint/a11y/useKeyWithClickEvents: backdrop click to close, Esc is handled natively by <dialog>
+    // biome-ignore lint/a11y/useKeyWithClickEvents: backdrop click to close; Esc is native to <dialog> (blocked while busy by onCancel and useBlockEscape)
     <dialog
       ref={ref}
       aria-labelledby={headingId}
