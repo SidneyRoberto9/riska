@@ -2,6 +2,7 @@ import { Loader2, X } from "lucide-react"
 import { type FormEvent, useEffect, useId, useRef, useState } from "react"
 import { useActions } from "#/data/actions"
 import { useImagesEnabled } from "#/data/images"
+import { readLastSection, writeLastSection } from "#/data/lastSection"
 import { useSource } from "#/data/source-context"
 import { useUploads } from "#/data/useUploads"
 import { LIMITS, type Section, type Status } from "#/lib/types"
@@ -13,16 +14,6 @@ import { useToast } from "./ToastProvider"
 import { VoiceButton } from "./VoiceButton"
 
 export type NewTaskTarget = { sectionId?: string; statusId?: string }
-
-const sectionKey = (pageId: string) => `checklist-board-section-${pageId}`
-
-const readLastSection = (pageId: string) => {
-  try {
-    return localStorage.getItem(sectionKey(pageId))
-  } catch {
-    return null
-  }
-}
 
 // The single way to create a task (list and board): short title, description, assignee, column, images.
 // While images upload nothing closes it; the task is created once, a failed image only retries the upload.
@@ -239,9 +230,7 @@ export function TaskCreateDialog({
                   value={sectionId}
                   onChange={(e) => {
                     setSectionId(e.target.value)
-                    try {
-                      localStorage.setItem(sectionKey(pageId), e.target.value)
-                    } catch {}
+                    writeLastSection(pageId, e.target.value)
                   }}
                   className={FIELD}
                 >
