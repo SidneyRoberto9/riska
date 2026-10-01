@@ -9,6 +9,7 @@ import { assigneesOf } from "#/lib/task"
 import { LIMITS, type Task } from "#/lib/types"
 import { Board } from "./Board"
 import { DragPreview } from "./DragPreview"
+import { ExportButton } from "./ExportButton"
 import { InlineEdit } from "./InlineEdit"
 import { NewSection } from "./NewSection"
 import { PagesLink } from "./PagesLink"
@@ -155,7 +156,8 @@ export function ChecklistView({ pageId, view, taskId }: { pageId: string; view?:
             />
           </h1>
           {/* Negative margin: the toggle is taller than the title line and shouldn't push the subtitle down */}
-          <div className="-my-2 shrink-0">
+          <div className="-my-2 flex shrink-0 items-center gap-1">
+            <ExportButton title={page.title} sections={sections} statuses={statuses} tasks={tasks} />
             <ViewToggle view={view} />
           </div>
         </div>
