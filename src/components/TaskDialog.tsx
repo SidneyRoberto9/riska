@@ -1,5 +1,5 @@
 import { Trash2, X } from "lucide-react"
-import { useEffect, useId, useLayoutEffect, useRef, useState } from "react"
+import { useEffect, useId, useRef, useState } from "react"
 import { useActions } from "#/data/actions"
 import { imageSrc, useImagesEnabled } from "#/data/images"
 import { useSource } from "#/data/source-context"
@@ -18,8 +18,8 @@ import { ImageLightbox } from "./ImageLightbox"
 import { InlineEdit } from "./InlineEdit"
 import { VoiceButton } from "./VoiceButton"
 
-// Every way of closing (X, Esc, backdrop) goes through dialog.close() → onClose; note and assignee are saved
-// on blur and on unmount. Closing while images upload is fine: the uploader keeps going and inserts the rows,
+// Every way of closing (X, Esc, backdrop) goes through dialog.close() → onClose. Title, note and assignee are
+// drafts written only by "Salvar"; closing with unsaved drafts asks first. Closing while images upload is fine: the uploader keeps going and inserts the rows,
 // and an image that then fails is reported by a toast.
 export function TaskDialog({
   task,
@@ -50,16 +50,23 @@ export function TaskDialog({
   const titleId = useId()
   const noteId = useId()
   const assigneeId = useId()
+  const [text, setText] = useState(task.text)
   const [note, setNote] = useState(task.note)
   const [assignee, setAssignee] = useState(task.assignee ?? "")
   // What the fields showed on open: only a field the user changed is written, so an edit made on another
   // device meanwhile isn't overwritten with the stale value
-  const initial = useRef({ note: task.note, assignee: task.assignee ?? "" })
-  const latest = useRef({ note, assignee, task })
-  // Committed values for the blur/unmount save (not written during render)
-  useLayoutEffect(() => {
-    latest.current = { note, assignee, task }
-  })
+  const [initial] = useState({ text: task.text, note: task.note, assignee: task.assignee ?? "" })
+  const changes: { text?: string; note?: string; assignee?: string } = {}
+  if (text.trim() && text.trim() !== initial.text.trim()) {
+    changes.text = text.trim()
+  }
+  if (note.trim() !== initial.note.trim()) {
+    changes.note = note.trim()
+  }
+  if (assignee.trim() !== initial.assignee.trim()) {
+    changes.assignee = assignee.trim()
+  }
+  const dirty = Object.keys(changes).length > 0
   const failed = uploads.items.some((u) => u.state === "error")
   // The viewed image was deleted (here or on another device): drop the lightbox
   if (viewing !== null && viewing >= attachments.length) {
@@ -67,21 +74,17 @@ export function TaskDialog({
   }
 
   const save = () => {
-    const { note, assignee, task } = latest.current
-    const changes: { note?: string; assignee?: string } = {}
-    const n = note.trim()
-    if (n !== initial.current.note.trim() && n !== task.note) {
-      changes.note = n
-    }
-    const who = assignee.trim()
-    if (who !== initial.current.assignee.trim() && who !== (task.assignee ?? "")) {
-      changes.assignee = who
-    }
-    if (changes.note !== undefined || changes.assignee !== undefined) {
+    if (dirty) {
       a.updateTask(task.id, changes)
     }
-    // The shown values are now in sync: a later edit from another device isn't overwritten by the next blur
-    initial.current = { note: n, assignee: who }
+    ref.current?.close()
+  }
+
+  const discardOk = () => !dirty || confirm("Descartar as alterações não salvas?")
+  const requestClose = () => {
+    if (discardOk()) {
+      ref.current?.close()
+    }
   }
 
   const addFiles = (files: File[]) => {
@@ -89,10 +92,8 @@ export function TaskDialog({
     void uploads.start({ id: task.id, pageId: task.pageId })
   }
 
-  // biome-ignore lint/correctness/useExhaustiveDependencies: open once on mount, save the latest values (via ref) on unmount
   useEffect(() => {
     ref.current?.showModal()
-    return save
   }, [])
 
   return (
@@ -100,6 +101,11 @@ export function TaskDialog({
     <dialog
       ref={ref}
       aria-labelledby={titleId}
+      onCancel={(e) => {
+        if (e.target === e.currentTarget && !discardOk()) {
+          e.preventDefault()
+        }
+      }}
       // The lightbox is a nested <dialog>: its close event reaches this handler through React, ignore it
       onClose={(e) => {
         if (e.target === e.currentTarget) {
@@ -119,7 +125,7 @@ export function TaskDialog({
       }}
       onClick={(e) => {
         if (downOnBackdrop.current && e.target === ref.current) {
-          ref.current.close()
+          requestClose()
         }
       }}
       className="task-dialog"
@@ -137,19 +143,19 @@ export function TaskDialog({
           </label>
           <h2 id={titleId} className="m-0 min-w-0 flex-1 text-base leading-snug font-semibold">
             <InlineEdit
-              value={task.text}
+              value={text}
               required
               multiline
               maxLength={titleMax(task.text)}
               label="Título da tarefa"
               voice="Ditar título"
-              onSave={(text) => a.updateTask(task.id, { text })}
+              onSave={setText}
               className={task.done ? "text-ink-soft line-through decoration-ink-soft/40" : ""}
             />
           </h2>
           <button
             type="button"
-            onClick={() => ref.current?.close()}
+            onClick={requestClose}
             aria-label="Fechar"
             className="-mt-2 grid size-10 shrink-0 place-items-center rounded-lg text-ink-soft hover:bg-accent-soft hover:text-accent"
           >
@@ -171,13 +177,7 @@ export function TaskDialog({
               <label htmlFor={assigneeId}>Responsável</label>
             </dt>
             <dd className="m-0 min-w-0">
-              <AssigneeInput
-                id={assigneeId}
-                value={assignee}
-                onChange={setAssignee}
-                onBlur={save}
-                options={assignees}
-              />
+              <AssigneeInput id={assigneeId} value={assignee} onChange={setAssignee} options={assignees} />
             </dd>
             {section && (
               <>
@@ -207,7 +207,6 @@ export function TaskDialog({
               id={noteId}
               value={note}
               onChange={(e) => setNote(e.target.value)}
-              onBlur={save}
               maxLength={LIMITS.taskNote}
               placeholder="Adicione uma descrição…"
               className={`${FIELD} min-h-28 resize-none leading-relaxed field-sizing-content`}
@@ -256,7 +255,7 @@ export function TaskDialog({
           )}
         </div>
 
-        <footer className="flex justify-end border-t border-line p-3">
+        <footer className="flex justify-between gap-2 border-t border-line p-3">
           <button
             type="button"
             onClick={() => {
@@ -267,6 +266,14 @@ export function TaskDialog({
           >
             <Trash2 size={16} aria-hidden />
             Deletar tarefa
+          </button>
+          <button
+            type="button"
+            onClick={save}
+            disabled={!dirty}
+            className="min-h-10 rounded-lg bg-accent px-4 font-semibold text-surface hover:brightness-110 disabled:opacity-40 disabled:hover:brightness-100"
+          >
+            Salvar
           </button>
         </footer>
       </div>

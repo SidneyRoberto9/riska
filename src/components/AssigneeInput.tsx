@@ -7,13 +7,11 @@ export function AssigneeInput({
   id,
   value,
   onChange,
-  onBlur,
   options,
 }: {
   id?: string
   value: string
   onChange: (value: string) => void
-  onBlur?: () => void
   options: string[]
 }) {
   const listId = useId()
@@ -24,7 +22,6 @@ export function AssigneeInput({
         list={listId}
         value={value}
         onChange={(e) => onChange(e.target.value)}
-        onBlur={onBlur}
         maxLength={LIMITS.assignee}
         autoComplete="off"
         placeholder="Quem cuida disso?"
