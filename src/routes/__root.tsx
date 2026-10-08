@@ -47,6 +47,10 @@ function RootDocument({ children }: { children: ReactNode }) {
     <html lang="pt-BR" data-theme={theme?.theme ?? "roxo"} data-mode={theme?.mode ?? "system"} suppressHydrationWarning>
       <head>
         <HeadContent />
+        {/* Here, not in head(): head() keeps one meta per name. Follows the system scheme (a <meta> can't see the
+            in-app light/dark choice); dark is the dark `ground` */}
+        <meta name="theme-color" content="#6d28d9" media="(prefers-color-scheme: light)" />
+        <meta name="theme-color" content="#17151e" media="(prefers-color-scheme: dark)" />
         {/* biome-ignore lint/security/noDangerouslySetInnerHtml: static constant, sets the theme before paint to avoid a flash */}
         <script dangerouslySetInnerHTML={{ __html: localThemeScript }} />
       </head>
