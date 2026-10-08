@@ -1,0 +1,28 @@
+{
+  "brand": "Riska",
+  "tagline": "Riscou, tá feito.",
+  "brief": "App de checklist e quadro kanban, sem contas: sessões com nome e PIN ou modo local. Feito para o celular, para pequenas equipes e uso pessoal.",
+  "adjectives": ["leve", "direto", "colaborativo", "sem atrito"],
+  "criteria": "Próprio do nome (riscar), fora do clichê check-no-quadrado, legível a 16 px, funciona em uma cor.",
+  "industry": "saas",
+  "nav": ["Como funciona", "Modo local", "Entrar"],
+  "brand_color": "#6d28d9",
+  "greyscale": false,
+  "designer": "Riska",
+  "round": 2,
+  "concepts": [
+    {
+      "name": "Risco",
+      "symbol": "riska-symbol.svg",
+      "lockup": "riska-horizontal.svg",
+      "idea": "Riscar o item é concluir: o risco termina num check.",
+      "rationale": [
+        "Traduz o nome (riscar) sem desenhar lista nem quadro",
+        "Um traço só: lê a 16 px e funciona em uma cor",
+        "Foge do check-dentro-do-quadrado da categoria"
+      ]
+    }
+  ],
+  "recommendation": "Risco — direção aprovada.",
+  "next_steps": ["Aplicar favicon e ícones no app", "Converter traços em contornos nos masters", "Busca de marca no INPI"]
+}
